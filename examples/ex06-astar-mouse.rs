@@ -75,7 +75,7 @@ impl State {
             return false;
         }
         let idx = (y * 80) + x;
-        self.map[idx as usize] == TileType::Floor
+        return self.map[idx as usize] == TileType::Floor;
     }
 }
 
@@ -103,7 +103,8 @@ impl GameState for State {
         // Iterate the map array, incrementing coordinates as we go.
         let mut y = 0;
         let mut x = 0;
-        for (i,tile) in self.map.iter().enumerate() {
+        let mut i: usize = 0;
+        for tile in self.map.iter() {
             // Render a tile depending upon the tile type; now we check visibility as well!
             let mut fg;
             let mut glyph = ".";
@@ -128,6 +129,7 @@ impl GameState for State {
                 x = 0;
                 y += 1;
             }
+            i += 1;
         }
 
         // Either render the proposed path or run along it
@@ -166,7 +168,7 @@ impl GameState for State {
         } else {
             self.player_position = self.path.steps[0] as usize;
             self.path.steps.remove(0);
-            if self.path.steps.is_empty() {
+            if self.path.steps.len() == 0 {
                 self.mode = Mode::Waiting;
             }
         }
@@ -221,13 +223,13 @@ impl BaseMap for State {
             exits.push(((idx + 80) + 1, 1.4));
         }
 
-        exits
+        return exits;
     }
 
     fn get_pathing_distance(&self, idx1: i32, idx2: i32) -> f32 {
         let p1 = Point::new(idx1 % 80, idx1 / 80);
         let p2 = Point::new(idx2 % 80, idx2 / 80);
-        rltk::distance2d(DistanceAlg::Pythagoras, p1, p2)
+        return DistanceAlg::Pythagoras.distance2d(p1, p2);
     }
 }
 

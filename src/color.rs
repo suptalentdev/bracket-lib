@@ -2,10 +2,7 @@ use super::rex::XpColor;
 use std::ops;
 
 #[cfg(feature = "serialization")]
-extern crate serde;
-
-#[cfg(feature = "serialization")]
-#[derive(Default, PartialEq, Copy, Clone, serde::Serialize, serde::Deserialize)]
+#[derive(PartialEq, Copy, Clone, serde::Serialize, serde::Deserialize)]
 /// Represents an R/G/B triplet, in the range 0..1 (32-bit float)
 pub struct RGB {
     pub r: f32,
@@ -14,7 +11,7 @@ pub struct RGB {
 }
 
 #[cfg(not(feature = "serialization"))]
-#[derive(Default, PartialEq, Copy, Clone)]
+#[derive(PartialEq, Copy, Clone)]
 /// Represents an R/G/B triplet, in the range 0..1 (32-bit float)
 pub struct RGB {
     pub r: f32,
@@ -219,14 +216,14 @@ impl RGB {
     /// Applies a quick grayscale conversion to the color
     pub fn to_greyscale(&self) -> RGB {
         let linear = (self.r * 0.2126) + (self.g * 0.7152) + (self.b * 0.0722);
-        return RGB::from_f32(linear, linear, linear);
+        RGB::from_f32(linear, linear, linear)
     }
 
     /// Applies a lengthier desaturate (via HSV) to the color
     pub fn desaturate(&self) -> RGB {
         let mut hsv = self.to_hsv();
         hsv.s = 0.0;
-        return hsv.to_rgb();
+        hsv.to_rgb()
     }
 
     /// Lerps by a specified percentage (from 0 to 1) between this color and another
@@ -252,7 +249,7 @@ impl HSV {
 
     /// Constructs a new HSV color, from 3 32-bit floats
     pub fn from_f32(h: f32, s: f32, v: f32) -> HSV {
-        return HSV { h: h, s: s, v: v };
+        HSV { h, s, v }
     }
 
     /// Converts an HSV triple to an RGB triple
