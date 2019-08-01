@@ -8,14 +8,13 @@ use glutin::event::{Event, WindowEvent};
 use glutin::event_loop::{ControlFlow, EventLoop};
 use glutin::window::WindowBuilder;
 use glutin::ContextBuilder;
-use std::time::Instant;
-extern crate winit;
 use std::ffi::CString;
+use std::time::Instant;
 
 /// A display console, used internally to provide console render support.
 /// Public in case you want to play with it, or access it directly.
 pub struct DisplayConsole {
-    pub console: Box<Console>,
+    pub console: Box<dyn Console>,
     pub shader_index: usize,
     pub font_index: usize,
 }
@@ -27,7 +26,6 @@ struct WrappedContext {
     wc: glutin::WindowedContext<glutin::PossiblyCurrent>,
 }
 
-#[allow(non_snake_case)]
 /// An RLTK context.
 pub struct Rltk {
     pub gl: gl::Gles2,
@@ -50,8 +48,6 @@ pub struct Rltk {
     post_screenburn: bool,
 }
 
-#[allow(dead_code)]
-#[allow(non_snake_case)]
 impl Rltk {
     /// Initializes an OpenGL context and a window, stores the info in the Rltk structure.
     pub fn init_raw<S: ToString>(
@@ -97,7 +93,7 @@ impl Rltk {
         let backing_fbo = Framebuffer::build_fbo(&gl, width_pixels as i32, height_pixels as i32);
 
         // Build a simple quad rendering vao
-        let quadVAO = quadrender::setup_quad(&gl);
+        let quad_vao = quadrender::setup_quad(&gl);
 
         Rltk {
             gl,
@@ -118,7 +114,7 @@ impl Rltk {
             }),
             quitting: false,
             backing_buffer: backing_fbo,
-            quad_vao: quadVAO,
+            quad_vao,
             post_scanlines: false,
             post_screenburn: false,
         }
@@ -177,10 +173,10 @@ impl Rltk {
     }
 
     /// Registers a new console terminal for output, and returns its handle number.
-    pub fn register_console(&mut self, new_console: Box<Console>, font_index: usize) -> usize {
+    pub fn register_console(&mut self, new_console: Box<dyn Console>, font_index: usize) -> usize {
         self.consoles.push(DisplayConsole {
             console: new_console,
-            font_index,
+            font_index: font_index,
             shader_index: 0,
         });
         self.consoles.len() - 1
@@ -190,12 +186,12 @@ impl Rltk {
     /// that the new console not render background colors, so it can be layered on top of other consoles.
     pub fn register_console_no_bg(
         &mut self,
-        new_console: Box<Console>,
+        new_console: Box<dyn Console>,
         font_index: usize,
     ) -> usize {
         self.consoles.push(DisplayConsole {
             console: new_console,
-            font_index,
+            font_index: font_index,
             shader_index: 1,
         });
         self.consoles.len() - 1
@@ -346,7 +342,6 @@ impl Console for Rltk {
     }
 }
 
-#[allow(non_snake_case)]
 /// Runs the RLTK application, calling into the provided gamestate handler every tick.
 pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
     let now = Instant::now();

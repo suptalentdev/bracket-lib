@@ -83,7 +83,7 @@ impl State {
         // Since the map doesn't change, we'll do this once. It's a list of indices of tiles that
         // are not walls, and aren't revealed
         for i in 0..80 * 50 {
-            if !state.map.revealed[i] && state.map.tiles[i] == TileType::Floor {
+            if state.map.revealed[i] == false && state.map.tiles[i] == TileType::Floor {
                 state.search_targets.push(i as i32);
             }
         }
@@ -121,7 +121,7 @@ impl GameState for State {
         let mut anything_left = true;
         DijkstraMap::clear(&mut self.flow_map);
         DijkstraMap::build(&mut self.flow_map, &self.search_targets, &self.map);
-        if self.flow_map.map[self.player_position] >= MAX {
+        if !(self.flow_map.map[self.player_position] < MAX) {
             anything_left = false;
         }
         if anything_left {
@@ -146,7 +146,8 @@ impl GameState for State {
         // Iterate the map array, incrementing coordinates as we go.
         let mut y = 0;
         let mut x = 0;
-        for (i, tile) in self.map.tiles.iter().enumerate() {
+        let mut i: usize = 0;
+        for tile in self.map.tiles.iter() {
             // New test: only render if its revealed
             let bg;
             let distance = self.flow_map.map[i];
@@ -184,6 +185,7 @@ impl GameState for State {
                 x = 0;
                 y += 1;
             }
+            i += 1;
         }
 
         // Render the player @ symbol
@@ -280,7 +282,7 @@ impl BaseMap for Map {
     fn get_pathing_distance(&self, idx1: i32, idx2: i32) -> f32 {
         let p1 = Point::new(idx1 % 80, idx1 / 80);
         let p2 = Point::new(idx2 % 80, idx2 / 80);
-        rltk::distance2d(DistanceAlg::Pythagoras, p1, p2)
+        DistanceAlg::Pythagoras.distance2d(p1, p2)
     }
 }
 
