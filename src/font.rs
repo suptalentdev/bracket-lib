@@ -1,3 +1,5 @@
+#[allow(dead_code)]
+extern crate image;
 use super::gl;
 use image::GenericImageView;
 use std::os::raw::c_void;
@@ -18,10 +20,10 @@ impl Font {
     pub fn new<S: ToString>(filename: S, width: u32, height: u32, tile_size: (u32, u32)) -> Font {
         Font {
             bitmap_file: filename.to_string(),
-            width,
-            height,
+            width: width,
+            height: height,
             gl_id: None,
-            tile_size,
+            tile_size: tile_size,
         }
     }
 
@@ -34,7 +36,7 @@ impl Font {
             width: img.width(),
             height: img.height(),
             gl_id: None,
-            tile_size,
+            tile_size: tile_size,
         }
     }
 

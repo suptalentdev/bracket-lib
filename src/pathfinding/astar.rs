@@ -7,17 +7,21 @@ use std::collections::HashMap;
 /// Bail out if the A* search exceeds this many steps.
 const MAX_DIRECT_PATH_CHECK: f32 = 2048.0;
 
+#[allow(dead_code)]
 /// Bail out if the A* search exceeds this many steps.
 const MAX_ASTAR_STEPS: i32 = 2048;
 
+#[allow(dead_code)]
 /// Request an A-Star search. The start and end are specified as index numbers (compatible with your
 /// BaseMap implementation), and it requires access to your map so as to call distance and exit
 /// determinations.
-pub fn a_star_search(start: i32, end: i32, map: &mut dyn BaseMap) -> NavigationPath {
-    AStar::new(start, end).search(map)
+pub fn a_star_search(start: i32, end: i32, map: &mut BaseMap) -> NavigationPath {
+    let mut searcher = AStar::new(start, end);
+    searcher.search(map)
 }
 
-#[derive(Clone)]
+#[allow(dead_code)]
+#[derive(Clone, Default)]
 /// Holds the result of an A-Star navigation query.
 /// `destination` is the index of the target tile.
 /// `success` is true if it reached the target, false otherwise.
@@ -60,6 +64,7 @@ impl PartialOrd for Node {
     }
 }
 
+#[allow(dead_code)]
 impl NavigationPath {
     /// Makes a new (empty) NavigationPath
     pub fn new() -> NavigationPath {
@@ -71,6 +76,7 @@ impl NavigationPath {
     }
 }
 
+#[allow(dead_code)]
 /// Private structure for calculating an A-Star navigation path.
 struct AStar {
     start: i32,
@@ -103,12 +109,12 @@ impl AStar {
     }
 
     /// Wrapper to the BaseMap's distance function.
-    fn distance_to_end(&self, idx: i32, map: &dyn BaseMap) -> f32 {
+    fn distance_to_end(&self, idx: i32, map: &BaseMap) -> f32 {
         map.get_pathing_distance(idx, self.end)
     }
 
     /// Adds a successor; if we're at the end, marks success.
-    fn add_successor(&mut self, q: Node, idx: i32, cost: f32, map: &dyn BaseMap) -> bool {
+    fn add_successor(&mut self, q: Node, idx: i32, cost: f32, map: &BaseMap) -> bool {
         // Did we reach our goal?
         if idx == self.end {
             self.parents.insert(idx, q.idx);
@@ -162,7 +168,7 @@ impl AStar {
     }
 
     /// Performs an A-Star search
-    fn search(&mut self, map: &dyn BaseMap) -> NavigationPath {
+    fn search(&mut self, map: &BaseMap) -> NavigationPath {
         let result = NavigationPath::new();
         while !self.open_list.is_empty() && self.step_counter < MAX_ASTAR_STEPS {
             self.step_counter += 1;
