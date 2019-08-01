@@ -128,6 +128,9 @@ impl State {
 
 // Implement the game loop
 impl GameState for State {
+    // We're allowing non snake-case here, because the underlying GL library exports
+    // keys in a way that makes Rust complain.
+    #[allow(non_snake_case)]
     fn tick(&mut self, ctx: &mut Rltk) {
         // Clear the screen
         ctx.cls();
@@ -245,7 +248,7 @@ impl GameState for State {
         } else {
             self.player_position = self.path.steps[0] as usize;
             self.path.steps.remove(0);
-            if self.path.steps.len() == 0 {
+            if self.path.steps.is_empty() {
                 self.mode = Mode::Waiting;
             }
         }
@@ -314,7 +317,7 @@ impl BaseMap for State {
         let p1 = Point3::new(pt1.0, pt1.1, pt1.2);
         let pt2 = idx_xyz(idx2 as usize);
         let p2 = Point3::new(pt2.0, pt2.1, pt2.2);
-        DistanceAlg::Pythagoras.distance3d(p1, p2)
+        rltk::distance3d(DistanceAlg::Pythagoras, p1, p2)
     }
 }
 
