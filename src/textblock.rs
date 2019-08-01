@@ -14,10 +14,10 @@ pub struct TextBlock {
 impl TextBlock {
     pub fn new(x: i32, y: i32, width: i32, height: i32) -> TextBlock {
         TextBlock {
-            x,
-            y,
-            width,
-            height,
+            x: x,
+            y: y,
+            width: width,
+            height: height,
             fg: RGB::from_f32(1.0, 1.0, 1.0),
             bg: RGB::from_f32(0.0, 0.0, 0.0),
             buffer: vec![
@@ -45,7 +45,7 @@ impl TextBlock {
         ((y * self.width) + x) as usize
     }
 
-    pub fn render(&self, console: &mut Box<dyn Console>) {
+    pub fn render(&self, console: &mut Box<Console>) {
         for y in 0..self.height {
             for x in 0..self.width {
                 console.set(

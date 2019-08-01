@@ -7,16 +7,20 @@ use std::collections::HashMap;
 /// Bail out if the A* search exceeds this many steps.
 const MAX_DIRECT_PATH_CHECK: f32 = 2048.0;
 
+#[allow(dead_code)]
 /// Bail out if the A* search exceeds this many steps.
 const MAX_ASTAR_STEPS: i32 = 2048;
 
+#[allow(dead_code)]
 /// Request an A-Star search. The start and end are specified as index numbers (compatible with your
 /// BaseMap implementation), and it requires access to your map so as to call distance and exit
 /// determinations.
-pub fn a_star_search(start: i32, end: i32, map: &mut dyn BaseMap) -> NavigationPath {
-    AStar::new(start, end).search(map)
+pub fn a_star_search(start: i32, end: i32, map: &mut BaseMap) -> NavigationPath {
+    let mut searcher = AStar::new(start, end);
+    return searcher.search(map);
 }
 
+#[allow(dead_code)]
 #[derive(Clone)]
 /// Holds the result of an A-Star navigation query.
 /// `destination` is the index of the target tile.
@@ -60,17 +64,19 @@ impl PartialOrd for Node {
     }
 }
 
+#[allow(dead_code)]
 impl NavigationPath {
     /// Makes a new (empty) NavigationPath
     pub fn new() -> NavigationPath {
-        NavigationPath {
+        return NavigationPath {
             destination: 0,
             success: false,
             steps: Vec::new(),
-        }
+        };
     }
 }
 
+#[allow(dead_code)]
 /// Private structure for calculating an A-Star navigation path.
 struct AStar {
     start: i32,
@@ -92,31 +98,31 @@ impl AStar {
             h: 0.0,
         });
 
-        AStar {
-            start,
-            end,
-            open_list,
+        return AStar {
+            start: start,
+            end: end,
+            open_list: open_list,
             parents: HashMap::new(),
             closed_list: HashMap::new(),
             step_counter: 0,
-        }
+        };
     }
 
     /// Wrapper to the BaseMap's distance function.
-    fn distance_to_end(&self, idx: i32, map: &dyn BaseMap) -> f32 {
-        map.get_pathing_distance(idx, self.end)
+    fn distance_to_end(&self, idx: i32, map: &BaseMap) -> f32 {
+        return map.get_pathing_distance(idx, self.end);
     }
 
     /// Adds a successor; if we're at the end, marks success.
-    fn add_successor(&mut self, q: Node, idx: i32, cost: f32, map: &dyn BaseMap) -> bool {
+    fn add_successor(&mut self, q: Node, idx: i32, cost: f32, map: &BaseMap) -> bool {
         // Did we reach our goal?
         if idx == self.end {
             self.parents.insert(idx, q.idx);
-            true
+            return true;
         } else {
             let distance = self.distance_to_end(idx, map);
             let s = Node {
-                idx,
+                idx: idx,
                 f: distance + cost,
                 g: cost,
                 h: distance,
@@ -140,7 +146,7 @@ impl AStar {
                 self.parents.insert(idx, q.idx);
             }
 
-            false
+            return false;
         }
     }
 
@@ -158,13 +164,13 @@ impl AStar {
             current = parent;
         }
 
-        result
+        return result;
     }
 
     /// Performs an A-Star search
-    fn search(&mut self, map: &dyn BaseMap) -> NavigationPath {
+    fn search(&mut self, map: &BaseMap) -> NavigationPath {
         let result = NavigationPath::new();
-        while !self.open_list.is_empty() && self.step_counter < MAX_ASTAR_STEPS {
+        while self.open_list.len() != 0 && self.step_counter < MAX_ASTAR_STEPS {
             self.step_counter += 1;
 
             // Pop Q off of the list
@@ -185,6 +191,6 @@ impl AStar {
             }
             self.closed_list.insert(q.idx, q.f);
         }
-        result
+        return result;
     }
 }

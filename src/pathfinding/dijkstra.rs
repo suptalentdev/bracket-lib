@@ -3,6 +3,7 @@ use rayon::prelude::*;
 use std::f32::MAX;
 use std::mem;
 
+#[allow(dead_code)]
 /// Representation of a Dijkstra flow map.
 /// map is a vector of floats, having a size equal to size_x * size_y (one per tile).
 /// size_x and size_y are stored for overflow avoidance.
@@ -28,19 +29,19 @@ impl DijkstraMap {
     pub fn new(
         size_x: i32,
         size_y: i32,
-        starts: &[i32],
-        map: &dyn BaseMap,
+        starts: &Vec<i32>,
+        map: &BaseMap,
         max_depth: f32,
     ) -> DijkstraMap {
         let result: Vec<f32> = vec![MAX; (size_x * size_y) as usize];
         let mut d = DijkstraMap {
             map: result,
-            size_x,
-            size_y,
-            max_depth,
+            size_x: size_x,
+            size_y: size_y,
+            max_depth: max_depth,
         };
         DijkstraMap::build(&mut d, starts, map);
-        d
+        return d;
     }
 
     /// Creates an empty Dijkstra map node.
@@ -48,11 +49,11 @@ impl DijkstraMap {
         let result: Vec<f32> = vec![MAX; (size_x * size_y) as usize];
         let d = DijkstraMap {
             map: result,
-            size_x,
-            size_y,
-            max_depth,
+            size_x: size_x,
+            size_y: size_y,
+            max_depth: max_depth,
         };
-        d
+        return d;
     }
 
     /// Internal: add a node to the open list if it doesn't exceed max_depth, and isn't on the closed list.
@@ -85,7 +86,7 @@ impl DijkstraMap {
     /// depth is further than the current depth.
     /// If you provide more starting points than you have CPUs, automatically branches to a parallel
     /// version.
-    pub fn build(dm: &mut DijkstraMap, starts: &[i32], map: &dyn BaseMap) {
+    pub fn build(dm: &mut DijkstraMap, starts: &Vec<i32>, map: &BaseMap) {
         if starts.len() > rayon::current_num_threads() {
             DijkstraMap::build_parallel(dm, starts, map);
             return;
@@ -137,7 +138,7 @@ impl DijkstraMap {
     }
 
     /// Implementation of Parallel Dijkstra.
-    fn build_parallel(dm: &mut DijkstraMap, starts: &[i32], map: &dyn BaseMap) {
+    fn build_parallel(dm: &mut DijkstraMap, starts: &Vec<i32>, map: &BaseMap) {
         let mapsize: usize = (dm.size_x * dm.size_y) as usize;
         let mut layers: Vec<ParallelDm> = Vec::with_capacity(starts.len());
         for start_chunk in starts.chunks(rayon::current_num_threads()) {
@@ -203,7 +204,7 @@ impl DijkstraMap {
     /// Helper for traversing maps as path-finding. Provides the index of the lowest available
     /// exit from the specified position index, or None if there isn't one.
     /// You would use this for pathing TOWARDS a starting node.
-    pub fn find_lowest_exit(dm: &DijkstraMap, position: i32, map: &dyn BaseMap) -> Option<i32> {
+    pub fn find_lowest_exit(dm: &DijkstraMap, position: i32, map: &BaseMap) -> Option<i32> {
         let mut exits = map.get_available_exits(position);
 
         for exit in exits.iter_mut() {
@@ -215,14 +216,14 @@ impl DijkstraMap {
         }
         exits.par_sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
-        Some(exits[0].0)
+        return Some(exits[0].0);
     }
 
     /// Helper for traversing maps as path-finding. Provides the index of the highest available
     /// exit from the specified position index, or None if there isn't one.
     /// You would use this for pathing AWAY from a starting node, for example if you are running
     /// away.
-    pub fn find_highest_exit(dm: &DijkstraMap, position: i32, map: &dyn BaseMap) -> Option<i32> {
+    pub fn find_highest_exit(dm: &DijkstraMap, position: i32, map: &BaseMap) -> Option<i32> {
         let mut exits = map.get_available_exits(position);
 
         for exit in exits.iter_mut() {
@@ -234,6 +235,6 @@ impl DijkstraMap {
         }
         exits.par_sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
 
-        Some(exits[0].0)
+        return Some(exits[0].0);
     }
 }

@@ -278,7 +278,12 @@ pub fn to_cp437(c: char) -> u8 {
 /// Converts a string into a vector of u8, CP437 representations of the string
 pub fn string_to_cp437<S: ToString>(input: S) -> Vec<u8> {
     let s = input.to_string();
-    s.chars().map(|c| to_cp437(c)).collect()
+    let mut result: Vec<u8> = Vec::with_capacity(s.chars().count());
+    for c in s.chars() {
+        result.push(to_cp437(c));
+    }
+
+    result
 }
 
 #[cfg(test)]

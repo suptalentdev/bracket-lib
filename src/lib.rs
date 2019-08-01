@@ -45,6 +45,9 @@ pub use self::sparse_console::SparseConsole;
 pub use self::textblock::{TextBlock, TextBuilder};
 pub use glutin::event::VirtualKeyCode;
 
+#[cfg(feature = "serialization")]
+extern crate serde;
+
 /// Implement this trait on your state struct, so the engine knows what to call on each tick.
 pub trait GameState: 'static {
     fn tick(&mut self, ctx: &mut Rltk);

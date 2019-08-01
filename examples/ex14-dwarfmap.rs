@@ -128,6 +128,9 @@ impl State {
 
 // Implement the game loop
 impl GameState for State {
+    // We're allowing non snake-case here, because the underlying GL library exports
+    // keys in a way that makes Rust complain.
+    #[allow(non_snake_case)]
     fn tick(&mut self, ctx: &mut Rltk) {
         // Clear the screen
         ctx.cls();
