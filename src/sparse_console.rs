@@ -14,6 +14,8 @@ pub struct SparseTile {
     pub bg: RGB,
 }
 
+#[allow(non_snake_case)]
+#[allow(dead_code)]
 /// A sparse console. Rather than storing every cell on the screen, it stores just cells that have
 /// data.
 pub struct SparseConsole {
@@ -31,24 +33,26 @@ pub struct SparseConsole {
     // GL Stuff
     vertex_buffer: Vec<f32>,
     index_buffer: Vec<i32>,
-    vbo: u32,
-    vao: u32,
-    ebo: u32,
+    VBO: u32,
+    VAO: u32,
+    EBO: u32,
 }
 
+#[allow(dead_code)]
 impl SparseConsole {
+    #[allow(non_snake_case)]
     /// Initializes the console.
     pub fn init(width: u32, height: u32, gl: &gl::Gles2) -> Box<SparseConsole> {
         // Console backing init
 
-        let (vbo, vao, ebo) = SparseConsole::init_gl_for_console(gl);
+        let (VBO, VAO, EBO) = SparseConsole::init_gl_for_console(gl);
 
         let new_console = SparseConsole {
             width,
             height,
-            vbo,
-            vao,
-            ebo,
+            VBO,
+            VAO,
+            EBO,
             tiles: Vec::new(),
             is_dirty: true,
             vertex_buffer: Vec::new(),
@@ -60,19 +64,20 @@ impl SparseConsole {
         Box::new(new_console)
     }
 
+    #[allow(non_snake_case)]
     /// Initializes OpenGL for the sparse console.
     fn init_gl_for_console(gl: &gl::Gles2) -> (u32, u32, u32) {
-        let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
+        let (mut VBO, mut VAO, mut EBO) = (0, 0, 0);
 
         unsafe {
             // Generate buffers and arrays, as well as attributes.
-            gl.GenVertexArrays(1, &mut vao);
-            gl.GenBuffers(1, &mut vbo);
-            gl.GenBuffers(1, &mut ebo);
+            gl.GenVertexArrays(1, &mut VAO);
+            gl.GenBuffers(1, &mut VBO);
+            gl.GenBuffers(1, &mut EBO);
 
-            gl.BindVertexArray(vao);
+            gl.BindVertexArray(VAO);
 
-            gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
+            gl.BindBuffer(gl::ARRAY_BUFFER, VBO);
 
             let stride = 11 * mem::size_of::<GLfloat>() as GLsizei;
             // position attribute
@@ -110,7 +115,7 @@ impl SparseConsole {
             gl.EnableVertexAttribArray(3);
         };
 
-        (vbo, vao, ebo)
+        (VBO, VAO, EBO)
     }
 
     /// Helper to push a point to the shader.
@@ -152,7 +157,7 @@ impl SparseConsole {
         let step_y: f32 = 2.0 / self.height as f32;
 
         let mut index_count: i32 = 0;
-        for t in &self.tiles {
+        for t in self.tiles.iter() {
             let x = t.idx % self.width as usize;
             let y = t.idx / self.width as usize;
 
@@ -164,10 +169,10 @@ impl SparseConsole {
             let glyph_x = glyph % 16;
             let glyph_y = 16 - (glyph / 16);
 
-            let glyph_left = glyph_x as f32 * glyph_size_x;
-            let glyph_right = (glyph_x + 1) as f32 * glyph_size_x;
-            let glyph_top = glyph_y as f32 * glyph_size_y;
-            let glyph_bottom = (glyph_y - 1) as f32 * glyph_size_y;
+            let glyph_left = f32::from(glyph_x) * glyph_size_x;
+            let glyph_right = f32::from(glyph_x + 1) * glyph_size_x;
+            let glyph_top = f32::from(glyph_y) * glyph_size_y;
+            let glyph_bottom = f32::from(glyph_y - 1) * glyph_size_y;
 
             SparseConsole::push_point(
                 &mut self.vertex_buffer,
@@ -217,7 +222,7 @@ impl SparseConsole {
         }
 
         unsafe {
-            gl.BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+            gl.BindBuffer(gl::ARRAY_BUFFER, self.VBO);
             gl.BufferData(
                 gl::ARRAY_BUFFER,
                 (self.vertex_buffer.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
@@ -225,7 +230,7 @@ impl SparseConsole {
                 gl::STATIC_DRAW,
             );
 
-            gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo);
+            gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.EBO);
             gl.BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
                 (self.index_buffer.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
@@ -253,9 +258,9 @@ impl Console for SparseConsole {
 
             // render container
             shader.useProgram(gl);
-            gl.BindVertexArray(self.vao);
-            gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo);
-            gl.BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+            gl.BindVertexArray(self.VAO);
+            gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.EBO);
+            gl.BindBuffer(gl::ARRAY_BUFFER, self.VBO);
             gl.DrawElements(
                 gl::TRIANGLES,
                 (self.tiles.len() * 6) as i32,
@@ -289,17 +294,15 @@ impl Console for SparseConsole {
         let mut idx = self.at(x, y);
 
         let bytes = super::string_to_cp437(output);
-
-        self.tiles.extend(bytes.into_iter().map(|glyph| {
-            let tile = SparseTile {
+        for i in 0..bytes.len() {
+            self.tiles.push(SparseTile {
                 idx,
-                glyph,
+                glyph: bytes[i],
                 fg: RGB::from_f32(1.0, 1.0, 1.0),
                 bg: RGB::from_f32(0.0, 0.0, 0.0),
-            };
+            });
             idx += 1;
-            tile
-        }));
+        }
     }
 
     /// Prints a string to an x/y position, with foreground and background colors.
@@ -308,22 +311,21 @@ impl Console for SparseConsole {
         let mut idx = self.at(x, y);
 
         let bytes = super::string_to_cp437(output);
-        self.tiles.extend(bytes.into_iter().map(|glyph| {
-            let tile = SparseTile { idx, glyph, fg, bg };
+        for i in 0..bytes.len() {
+            self.tiles.push(SparseTile {
+                idx,
+                glyph: bytes[i],
+                fg,
+                bg,
+            });
             idx += 1;
-            tile
-        }));
+        }
     }
 
     /// Sets a single cell in the console
     fn set(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, glyph: u8) {
         let idx = self.at(x, y);
-        self.tiles.push(SparseTile {
-            idx,
-            glyph: glyph,
-            fg,
-            bg,
-        });
+        self.tiles.push(SparseTile { idx, glyph, fg, bg });
     }
 
     /// Sets a single cell in the console's background
@@ -404,11 +406,11 @@ impl Console for SparseConsole {
             }
         }
 
-        for c in &self.tiles {
+        for c in self.tiles.iter() {
             let x = c.idx % self.width as usize;
             let y = c.idx / self.width as usize;
             let cell = layer.get_mut(x as usize, y as usize).unwrap();
-            cell.ch = c.glyph as u32;
+            cell.ch = u32::from(c.glyph);
             cell.fg = c.fg.to_xp();
             cell.bg = c.bg.to_xp();
         }

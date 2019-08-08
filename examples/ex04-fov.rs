@@ -82,22 +82,46 @@ impl GameState for State {
                 // A key is pressed or held
                 match key {
                     // Numpad
-                    VirtualKeyCode::Numpad8 => self.move_player(0, -1),
-                    VirtualKeyCode::Numpad4 => self.move_player(-1, 0),
-                    VirtualKeyCode::Numpad6 => self.move_player(1, 0),
-                    VirtualKeyCode::Numpad2 => self.move_player(0, 1),
+                    VirtualKeyCode::Numpad8 => {
+                        self.move_player(0, -1);
+                    }
+                    VirtualKeyCode::Numpad4 => {
+                        self.move_player(-1, 0);
+                    }
+                    VirtualKeyCode::Numpad6 => {
+                        self.move_player(1, 0);
+                    }
+                    VirtualKeyCode::Numpad2 => {
+                        self.move_player(0, 1);
+                    }
 
                     // Numpad diagonals
-                    VirtualKeyCode::Numpad7 => self.move_player(-1, -1),
-                    VirtualKeyCode::Numpad9 => self.move_player(1, -1),
-                    VirtualKeyCode::Numpad1 => self.move_player(-1, 1),
-                    VirtualKeyCode::Numpad3 => self.move_player(1, 1),
+                    VirtualKeyCode::Numpad7 => {
+                        self.move_player(-1, -1);
+                    }
+                    VirtualKeyCode::Numpad9 => {
+                        self.move_player(1, -1);
+                    }
+                    VirtualKeyCode::Numpad1 => {
+                        self.move_player(-1, 1);
+                    }
+                    VirtualKeyCode::Numpad3 => {
+                        self.move_player(1, 1);
+                    }
 
                     // Cursors
-                    VirtualKeyCode::Up => self.move_player(0, -1),
-                    VirtualKeyCode::Down => self.move_player(0, 1),
-                    VirtualKeyCode::Left => self.move_player(-1, 0),
-                    VirtualKeyCode::Right => self.move_player(1, 0),
+                    VirtualKeyCode::Up => {
+                        self.move_player(0, -1);
+                    }
+                    VirtualKeyCode::Down => {
+                        self.move_player(0, 1);
+                    }
+                    VirtualKeyCode::Left => {
+                        self.move_player(-1, 0);
+                    }
+                    VirtualKeyCode::Right => {
+                        self.move_player(1, 0);
+                    }
 
                     _ => {} // Ignore all the other possibilities
                 }
@@ -105,7 +129,7 @@ impl GameState for State {
         }
 
         // Set all tiles to not visible
-        for v in &mut self.visible {
+        for v in self.visible.iter_mut() {
             *v = false;
         }
 
@@ -114,7 +138,7 @@ impl GameState for State {
         let fov = rltk::field_of_view(player_position, 8, self);
 
         // Note that the steps above would generally not be run every frame!
-        for idx in &fov {
+        for idx in fov.iter() {
             self.visible[xy_idx(idx.x, idx.y)] = true;
         }
 
@@ -124,8 +148,7 @@ impl GameState for State {
         // Iterate the map array, incrementing coordinates as we go.
         let mut y = 0;
         let mut x = 0;
-        let mut i: usize = 0;
-        for tile in &self.map {
+        for (i, tile) in self.map.iter().enumerate() {
             // Render a tile depending upon the tile type; now we check visibility as well!
             let mut fg;
             let mut glyph = ".";
@@ -150,7 +173,6 @@ impl GameState for State {
                 x = 0;
                 y += 1;
             }
-            i += 1;
         }
 
         // Render the player @ symbol
