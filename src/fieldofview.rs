@@ -45,7 +45,7 @@ fn scan_fov_line(
 
     let mut blocked = false;
 
-    for target in &line {
+    for target in line.iter() {
         if !blocked {
             let dsq = DistanceAlg::PythagorasSquared.distance2d(start, *target);
             if dsq <= range_squared {

@@ -399,7 +399,7 @@ impl Console for SimpleConsole {
             for x in 0..self.width {
                 let cell = layer.get_mut(x as usize, y as usize).unwrap();
                 let idx = self.at(x as i32, y as i32);
-                cell.ch = self.tiles[idx].glyph as u32;
+                cell.ch = u32::from(self.tiles[idx].glyph);
                 cell.fg = self.tiles[idx].fg.to_xp();
                 cell.bg = self.tiles[idx].bg.to_xp();
             }

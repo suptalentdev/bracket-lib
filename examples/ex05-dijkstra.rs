@@ -185,7 +185,6 @@ impl GameState for State {
                 x = 0;
                 y += 1;
             }
-            i += 1;
         }
 
         // Render the player @ symbol

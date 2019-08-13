@@ -7,6 +7,7 @@ pub struct RandomNumberGenerator {
 
 impl RandomNumberGenerator {
     /// Creates a new RNG from a randomly generated seed
+    #[allow(clippy::new_without_default)] // XorShiftRng doesn't have a Default, so we don't either
     pub fn new() -> RandomNumberGenerator {
         let rng: XorShiftRng = SeedableRng::from_entropy();
         RandomNumberGenerator { rng }

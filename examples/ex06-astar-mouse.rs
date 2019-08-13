@@ -129,7 +129,6 @@ impl GameState for State {
                 x = 0;
                 y += 1;
             }
-            i += 1;
         }
 
         // Either render the proposed path or run along it
