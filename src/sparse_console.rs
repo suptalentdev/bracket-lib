@@ -1,7 +1,10 @@
 use super::{gui_helpers, rex::XpColor, rex::XpLayer, Console, Font, Shader, RGB};
-//use glow::types::*;
-use glow::HasContext;
+//use gl::types::*;
+use super::gl;
+use gl::types::*;
 use std::mem;
+use std::os::raw::c_void;
+use std::ptr;
 
 /// Internal storage structure for sparse tiles.
 pub struct SparseTile {
@@ -35,7 +38,7 @@ pub struct SparseConsole {
 
 impl SparseConsole {
     /// Initializes the console.
-    pub fn init(width: u32, height: u32, gl: &glow::Context) -> Box<SparseConsole> {
+    pub fn init(width: u32, height: u32, gl: &gl::Gles2) -> Box<SparseConsole> {
         // Console backing init
 
         let (vbo, vao, ebo) = SparseConsole::init_gl_for_console(gl);
@@ -58,53 +61,53 @@ impl SparseConsole {
     }
 
     /// Initializes OpenGL for the sparse console.
-    fn init_gl_for_console(gl: &glow::Context) -> (u32, u32, u32) {
-        let (vbo, vao, ebo);
+    fn init_gl_for_console(gl: &gl::Gles2) -> (u32, u32, u32) {
+        let (mut vbo, mut vao, mut ebo) = (0, 0, 0);
 
         unsafe {
             // Generate buffers and arrays, as well as attributes.
-            vao = gl.create_vertex_array().unwrap();
-            vbo = gl.create_buffer().unwrap();
-            ebo = gl.create_buffer().unwrap();
+            gl.GenVertexArrays(1, &mut vao);
+            gl.GenBuffers(1, &mut vbo);
+            gl.GenBuffers(1, &mut ebo);
 
-            gl.bind_vertex_array(Some(vao));
+            gl.BindVertexArray(vao);
 
-            gl.bind_buffer(glow::ARRAY_BUFFER, Some(vbo));
+            gl.BindBuffer(gl::ARRAY_BUFFER, vbo);
 
-            let stride = 11 * mem::size_of::<f32>() as i32;
+            let stride = 11 * mem::size_of::<GLfloat>() as GLsizei;
             // position attribute
-            gl.vertex_attrib_pointer_f32(0, 3, glow::FLOAT, false, stride, 0);
-            gl.enable_vertex_attrib_array(0);
+            gl.VertexAttribPointer(0, 3, gl::FLOAT, gl::FALSE, stride, ptr::null());
+            gl.EnableVertexAttribArray(0);
             // color attribute
-            gl.vertex_attrib_pointer_f32(
+            gl.VertexAttribPointer(
                 1,
                 3,
-                glow::FLOAT,
-                false,
+                gl::FLOAT,
+                gl::FALSE,
                 stride,
-                (3 * mem::size_of::<f32>()) as i32,
+                (3 * mem::size_of::<GLfloat>()) as *const c_void,
             );
-            gl.enable_vertex_attrib_array(1);
+            gl.EnableVertexAttribArray(1);
             // bgcolor attribute
-            gl.vertex_attrib_pointer_f32(
+            gl.VertexAttribPointer(
                 2,
                 3,
-                glow::FLOAT,
-                false,
+                gl::FLOAT,
+                gl::FALSE,
                 stride,
-                (6 * mem::size_of::<f32>()) as i32,
+                (6 * mem::size_of::<GLfloat>()) as *const c_void,
             );
-            gl.enable_vertex_attrib_array(2);
+            gl.EnableVertexAttribArray(2);
             // texture coord attribute
-            gl.vertex_attrib_pointer_f32(
+            gl.VertexAttribPointer(
                 3,
                 2,
-                glow::FLOAT,
-                false,
+                gl::FLOAT,
+                gl::FALSE,
                 stride,
-                (9 * mem::size_of::<f32>()) as i32,
+                (9 * mem::size_of::<GLfloat>()) as *const c_void,
             );
-            gl.enable_vertex_attrib_array(3);
+            gl.EnableVertexAttribArray(3);
         };
 
         (vbo, vao, ebo)
@@ -124,7 +127,7 @@ impl SparseConsole {
     }
 
     /// Helper to build vertices for the sparse grid.
-    fn rebuild_vertices(&mut self, gl: &glow::Context) {
+    fn rebuild_vertices(&mut self, gl: &gl::Gles2) {
         if self.tiles.is_empty() {
             return;
         }
@@ -204,18 +207,20 @@ impl SparseConsole {
         }
 
         unsafe {
-            gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.vbo));
-            gl.buffer_data_u8_slice(
-                glow::ARRAY_BUFFER,
-                &self.vertex_buffer.align_to::<u8>().1,
-                glow::STATIC_DRAW,
+            gl.BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+            gl.BufferData(
+                gl::ARRAY_BUFFER,
+                (self.vertex_buffer.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
+                &self.vertex_buffer[0] as *const f32 as *const c_void,
+                gl::STATIC_DRAW,
             );
 
-            gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.ebo));
-            gl.buffer_data_u8_slice(
-                glow::ELEMENT_ARRAY_BUFFER,
-                &self.index_buffer.align_to::<u8>().1,
-                glow::STATIC_DRAW,
+            gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo);
+            gl.BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (self.index_buffer.len() * mem::size_of::<GLfloat>()) as GLsizeiptr,
+                &self.index_buffer[0] as *const i32 as *const c_void,
+                gl::STATIC_DRAW,
             );
         }
     }
@@ -223,7 +228,7 @@ impl SparseConsole {
 
 impl Console for SparseConsole {
     /// If the console has changed, rebuild the vertex buffer.
-    fn rebuild_if_dirty(&mut self, gl: &glow::Context) {
+    fn rebuild_if_dirty(&mut self, gl: &gl::Gles2) {
         if self.is_dirty {
             self.rebuild_vertices(gl);
             self.is_dirty = false;
@@ -231,21 +236,21 @@ impl Console for SparseConsole {
     }
 
     /// Draws the console to OpenGL.
-    fn gl_draw(&mut self, font: &Font, shader: &Shader, gl: &glow::Context) {
+    fn gl_draw(&mut self, font: &Font, shader: &Shader, gl: &gl::Gles2) {
         unsafe {
             // bind Texture
             font.bind_texture(gl);
 
             // render container
             shader.useProgram(gl);
-            gl.bind_vertex_array(Some(self.vao));
-            gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, Some(self.ebo));
-            gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.vbo));
-            gl.draw_elements(
-                glow::TRIANGLES,
+            gl.BindVertexArray(self.vao);
+            gl.BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ebo);
+            gl.BindBuffer(gl::ARRAY_BUFFER, self.vbo);
+            gl.DrawElements(
+                gl::TRIANGLES,
                 (self.tiles.len() * 6) as i32,
-                glow::UNSIGNED_INT,
-                0,
+                gl::UNSIGNED_INT,
+                ptr::null(),
             );
         }
         self.is_dirty = false;
