@@ -1,12 +1,3 @@
-pub mod gl {
-    pub use self::Gles2 as Gl;
-    include!(concat!(env!("OUT_DIR"), "/gl_bindings.rs"));
-}
-
-pub struct Gl {
-    pub gl: gl::Gl,
-}
-
 mod codepage437;
 mod color;
 mod console;
@@ -41,7 +32,13 @@ pub use self::shader::Shader;
 pub use self::simple_console::SimpleConsole;
 pub use self::sparse_console::SparseConsole;
 pub use self::textblock::{TextBlock, TextBuilder};
+pub mod platform_specific;
+
+#[cfg(not(target_arch = "wasm32"))]
 pub use glutin::event::VirtualKeyCode;
+
+#[cfg(target_arch = "wasm32")]
+pub use platform_specific::VirtualKeyCode;
 
 /// Implement this trait on your state struct, so the engine knows what to call on each tick.
 pub trait GameState: 'static {
