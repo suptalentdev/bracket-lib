@@ -1,6 +1,6 @@
 use super::super::embedding;
 use glow::HasContext;
-use image::{GenericImageView, ColorType};
+use image::GenericImageView;
 
 #[derive(PartialEq, Clone)]
 /// RLTK's representation of a font or tileset file.
@@ -88,19 +88,14 @@ impl Font {
             let img_orig = Font::load_image(&self.bitmap_file);
             let img = img_orig.flipv();
             let data = img.raw_pixels();
-            let format = match img.color() {
-                ColorType::RGB(_) => glow::RGB,
-                ColorType::RGBA(_) => glow::RGBA,
-                _ => { panic!("unexpected image format {:?} for {}", img.color(), self.bitmap_file); }
-            };
             gl.tex_image_2d(
                 glow::TEXTURE_2D,
                 0,
-                format as i32,
+                glow::RGB as i32,
                 img.width() as i32,
                 img.height() as i32,
                 0,
-                format,
+                glow::RGB,
                 glow::UNSIGNED_BYTE,
                 Some(&data),
             );
@@ -133,30 +128,25 @@ impl Font {
             gl.tex_parameter_i32(
                 glow::TEXTURE_2D,
                 glow::TEXTURE_MIN_FILTER,
-                glow::LINEAR as i32,
+                glow::NEAREST as i32,
             );
             gl.tex_parameter_i32(
                 glow::TEXTURE_2D,
                 glow::TEXTURE_MAG_FILTER,
-                glow::LINEAR as i32,
+                glow::NEAREST as i32,
             );
 
             let img_orig = Font::load_image(&self.bitmap_file);
             let img = img_orig.flipv();
             let data = img.raw_pixels();
-            let format = match img.color() {
-                ColorType::RGB(_) => glow::RGB,
-                ColorType::RGBA(_) => glow::RGBA,
-                _ => { panic!("unexpected image format {:?} for {}", img.color(), self.bitmap_file); }
-            };
             gl.tex_image_2d(
                 glow::TEXTURE_2D,
                 0,
-                format as i32,
+                glow::RGB as i32,
                 img.width() as i32,
                 img.height() as i32,
                 0,
-                format,
+                glow::RGB,
                 glow::UNSIGNED_BYTE,
                 Some(&data),
             );
