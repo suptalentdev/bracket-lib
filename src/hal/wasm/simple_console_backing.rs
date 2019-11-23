@@ -10,8 +10,7 @@ pub struct SimpleConsoleBackend {
 }
 
 impl SimpleConsoleBackend {
-    pub fn new(platform: &super::super::RltkPlatform, width: usize, height: usize) -> SimpleConsoleBackend {
-        let gl = &platform.platform.gl;
+    pub fn new(gl: &glow::Context, width: usize, height: usize) -> SimpleConsoleBackend {
         let texture;
         unsafe {
             texture = gl.create_texture().unwrap();
@@ -103,14 +102,13 @@ impl SimpleConsoleBackend {
     /// Rebuilds the OpenGL backing buffer.
     pub fn rebuild_vertices(
         &mut self,
-        platform: &super::super::RltkPlatform,
+        gl: &glow::Context,
         height: u32,
         width: u32,
         tiles: &Vec<Tile>,
         offset_x: f32,
         offset_y: f32,
     ) {
-        let gl = &platform.platform.gl;
         unsafe {
             let mut data = vec![0u8; width as usize * height as usize * 4];
             let mut data2 = vec![0u8; width as usize * height as usize * 4];
@@ -161,11 +159,10 @@ impl SimpleConsoleBackend {
         &mut self,
         font: &Font,
         shader: &Shader,
-        platform: &super::super::RltkPlatform,
+        gl: &glow::Context,
         _width: u32,
         _height: u32,
     ) {
-        let gl = &platform.platform.gl;
         unsafe {
             gl.active_texture(glow::TEXTURE1);
             gl.bind_texture(glow::TEXTURE_2D, Some(self.charbuffer));

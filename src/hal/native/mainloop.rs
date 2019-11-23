@@ -10,7 +10,7 @@ const TICK_TYPE: ControlFlow = ControlFlow::Poll;
 
 pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
     unsafe {
-        rltk.backend.platform
+        rltk.backend
             .gl
             .viewport(0, 0, rltk.width_pixels as i32, rltk.height_pixels as i32);
     }
@@ -62,7 +62,7 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                     wc.resize(physical);
                     rltk.resize_pixels(physical.width as u32, physical.height as u32);
                     unsafe {
-                        rltk.backend.platform.gl.viewport(
+                        rltk.backend.gl.viewport(
                             0,
                             0,
                             physical.width as i32,
@@ -70,7 +70,7 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                         );
                     }
                     rltk.backend.platform.backing_buffer = Framebuffer::build_fbo(
-                        &rltk.backend.platform.gl,
+                        &rltk.backend.gl,
                         physical.width as i32,
                         physical.height as i32,
                     );
@@ -146,25 +146,25 @@ fn tock<GS: GameState>(
 
     // Console structure - doesn't really have to be every frame...
     for cons in &mut rltk.consoles {
-        cons.console.rebuild_if_dirty(&rltk.backend);
+        cons.console.rebuild_if_dirty(&rltk.backend.gl);
     }
 
     // Bind to the backing buffer
     if rltk.post_scanlines {
-        rltk.backend.platform.backing_buffer.bind(&rltk.backend.platform.gl);
+        rltk.backend.platform.backing_buffer.bind(&rltk.backend.gl);
     }
 
     // Clear the screen
     unsafe {
-        rltk.backend.platform.gl.clear_color(0.0, 0.0, 0.0, 1.0);
-        rltk.backend.platform.gl.clear(glow::COLOR_BUFFER_BIT);
+        rltk.backend.gl.clear_color(0.0, 0.0, 0.0, 1.0);
+        rltk.backend.gl.clear(glow::COLOR_BUFFER_BIT);
     }
 
     // Tell each console to draw itself
     for cons in &mut rltk.consoles {
         let font = &rltk.fonts[cons.font_index];
         let shader = &rltk.shaders[cons.shader_index];
-        cons.console.gl_draw(font, shader, &rltk.backend);
+        cons.console.gl_draw(font, shader, &rltk.backend.gl);
     }
 
     if rltk.post_scanlines {
@@ -172,29 +172,29 @@ fn tock<GS: GameState>(
         rltk.backend
             .platform
             .backing_buffer
-            .default(&rltk.backend.platform.gl);
+            .default(&rltk.backend.gl);
         unsafe {
             if rltk.post_scanlines {
-                rltk.shaders[3].useProgram(&rltk.backend.platform.gl);
+                rltk.shaders[3].useProgram(&rltk.backend.gl);
                 rltk.shaders[3].setVec3(
-                    &rltk.backend.platform.gl,
+                    &rltk.backend.gl,
                     "screenSize",
                     rltk.width_pixels as f32,
                     rltk.height_pixels as f32,
                     0.0,
                 );
-                rltk.shaders[3].setBool(&rltk.backend.platform.gl, "screenBurn", rltk.post_screenburn);
+                rltk.shaders[3].setBool(&rltk.backend.gl, "screenBurn", rltk.post_screenburn);
             } else {
-                rltk.shaders[2].useProgram(&rltk.backend.platform.gl);
+                rltk.shaders[2].useProgram(&rltk.backend.gl);
             }
-            rltk.backend.platform
+            rltk.backend
                 .gl
                 .bind_vertex_array(Some(rltk.backend.platform.quad_vao));
-            rltk.backend.platform.gl.bind_texture(
+            rltk.backend.gl.bind_texture(
                 glow::TEXTURE_2D,
                 Some(rltk.backend.platform.backing_buffer.texture),
             );
-            rltk.backend.platform.gl.draw_arrays(glow::TRIANGLES, 0, 6);
+            rltk.backend.gl.draw_arrays(glow::TRIANGLES, 0, 6);
         }
     }
 }

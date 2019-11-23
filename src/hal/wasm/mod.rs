@@ -13,11 +13,8 @@ mod simple_console_backing;
 pub use simple_console_backing::*;
 mod sparse_console_backing;
 pub use sparse_console_backing::*;
-pub mod font;
-pub mod shader;
 
 pub struct PlatformGL {
-    pub gl: glow::Context,
     pub context_wrapper: Option<WrappedContext>,
     pub quad_vao : glow::WebVertexArrayKey
 }
