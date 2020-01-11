@@ -1,7 +1,7 @@
 use super::super::super::{Console, GameState, Rltk};
 use super::super::*;
 use glow::HasContext;
-use glutin::{event::DeviceEvent, event::Event, event::WindowEvent, event_loop::ControlFlow};
+use glutin::{event::Event, event::WindowEvent, event_loop::ControlFlow};
 use std::time::Instant;
 
 const TICK_TYPE: ControlFlow = ControlFlow::Poll;
@@ -39,6 +39,9 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
             Event::NewEvents(_) => {
                 rltk.left_click = false;
                 rltk.key = None;
+                rltk.shift = false;
+                rltk.control = false;
+                rltk.alt = false;
             }
             Event::MainEventsCleared => {
                 tock(
@@ -50,14 +53,6 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                     &now,
                 );
                 wc.swap_buffers().unwrap();
-            }
-            Event::DeviceEvent {
-                event: DeviceEvent::ModifiersChanged(modifiers),
-                ..
-            } => {
-                rltk.shift = modifiers.shift();
-                rltk.alt = modifiers.alt();
-                rltk.control = modifiers.ctrl();
             }
             Event::LoopDestroyed => (),
             Event::WindowEvent { ref event, .. } => match event {
@@ -99,11 +94,21 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                         glutin::event::KeyboardInput {
                             virtual_keycode: Some(virtual_keycode),
                             state: glutin::event::ElementState::Pressed,
+                            modifiers,
                             ..
                         },
                     ..
                 } => {
                     rltk.key = Some(*virtual_keycode);
+                    if modifiers.shift() {
+                        rltk.shift = true;
+                    }
+                    if modifiers.alt() {
+                        rltk.alt = true;
+                    }
+                    if modifiers.ctrl() {
+                        rltk.control = true;
+                    }
                 }
 
                 _ => (),
