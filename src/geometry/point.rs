@@ -1,5 +1,4 @@
 use std::ops;
-use std::convert::TryInto;
 
 #[cfg_attr(
     feature = "serialization",
@@ -15,10 +14,8 @@ pub struct Point {
 impl Point {
     /// Create a new point from an x/y coordinate.
     #[inline]
-    pub fn new<T>(x: T, y: T) -> Point
-    where T : TryInto<i32>
-    {
-        Point { x: x.try_into().ok().unwrap(), y: y.try_into().ok().unwrap() }
+    pub fn new(x: i32, y: i32) -> Point {
+        Point { x, y }
     }
 
     // Create a zero point
@@ -29,32 +26,8 @@ impl Point {
 
     #[inline]
     // Create a point from a tuple of two i32s
-    pub fn from_tuple<T>(t: (T, T)) -> Self 
-    where T : TryInto<i32>
-    {
-        Point::new(t.0, t.1)
-    }
-
-    #[inline]
-    // Helper for map index conversion
-    pub fn to_index<T>(&self, width : T) -> usize 
-    where T : TryInto<usize>
-    {
-        let x : usize = self.x.try_into().ok().unwrap();
-        let y : usize = self.y.try_into().ok().unwrap();
-        let w : usize = width.try_into().ok().unwrap();
-        (y * w) + x
-    }
-
-    pub fn to_tuple(&self) -> (i32, i32) {
-        (self.x, self.y)
-    }
-
-    pub fn to_unsigned_tuple(&self) -> (usize, usize) {
-        (
-            self.x.try_into().ok().unwrap(),
-            self.y.try_into().ok().unwrap()
-        )
+    pub fn from_tuple(t: (i32, i32)) -> Self {
+        Point { x: t.0, y: t.1 }
     }
 }
 

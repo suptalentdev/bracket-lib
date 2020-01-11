@@ -4,7 +4,6 @@ use super::{
     SimpleConsole, VirtualKeyCode, RGB,
 };
 use std::any::Any;
-use std::convert::TryInto;
 
 /// A display console, used internally to provide console render support.
 /// Public in case you want to play with it, or access it directly.
@@ -39,51 +38,39 @@ pub struct Rltk {
 
 impl Rltk {
     /// Initializes an OpenGL context and a window, stores the info in the Rltk structure.
-    pub fn init_raw<S: ToString, T>(width_pixels: T, height_pixels: T, window_title: S) -> Rltk 
-    where T : TryInto<u32>
-    {
-        let w : u32 = width_pixels.try_into().ok().unwrap();
-        let h : u32 = height_pixels.try_into().ok().unwrap();
-        init_raw(w, h, window_title)
+    pub fn init_raw<S: ToString>(width_pixels: u32, height_pixels: u32, window_title: S) -> Rltk {
+        init_raw(width_pixels, height_pixels, window_title)
     }
 
     /// Quick initialization for when you just want an 8x8 font terminal
-    pub fn init_simple8x8<S: ToString, T>(
-        width_chars: T,
-        height_chars: T,
+    pub fn init_simple8x8<S: ToString>(
+        width_chars: u32,
+        height_chars: u32,
         window_title: S,
         path_to_shaders: S,
-    ) -> Rltk 
-    where T : TryInto<u32>
-    {
-        let w : u32 = width_chars.try_into().ok().unwrap();
-        let h : u32 = height_chars.try_into().ok().unwrap();
+    ) -> Rltk {
         let font_path = format!("{}/terminal8x8.png", &path_to_shaders.to_string());
-        let mut context = Rltk::init_raw(w * 8, h * 8, window_title);
+        let mut context = Rltk::init_raw(width_chars * 8, height_chars * 8, window_title);
         let font = context.register_font(font::Font::load(&font_path.to_string(), (8, 8)));
         context.register_console(
-            SimpleConsole::init(w, h, &context.backend),
+            SimpleConsole::init(width_chars, height_chars, &context.backend),
             font,
         );
         context
     }
 
     /// Quick initialization for when you just want an 8x16 VGA font terminal
-    pub fn init_simple8x16<S: ToString, T>(
-        width_chars: T,
-        height_chars: T,
+    pub fn init_simple8x16<S: ToString>(
+        width_chars: u32,
+        height_chars: u32,
         window_title: S,
         path_to_shaders: S,
-    ) -> Rltk 
-    where T : TryInto<u32>
-    {
-        let w : u32 = width_chars.try_into().ok().unwrap();
-        let h : u32 = height_chars.try_into().ok().unwrap();
+    ) -> Rltk {
         let font_path = format!("{}/vga8x16.png", &path_to_shaders.to_string());
-        let mut context = Rltk::init_raw(w * 8, h * 16, window_title);
+        let mut context = Rltk::init_raw(width_chars * 8, height_chars * 16, window_title);
         let font = context.register_font(font::Font::load(&font_path.to_string(), (8, 16)));
         context.register_console(
-            SimpleConsole::init(w, h, &context.backend),
+            SimpleConsole::init(width_chars, height_chars, &context.backend),
             font,
         );
         context
@@ -130,17 +117,16 @@ impl Rltk {
     /// Applies the current physical mouse position to the active console, and translates
     /// the coordinates into that console's coordinate space.
     pub fn mouse_pos(&mut self) -> (i32, i32) {
-        let font_size = self.fonts[self.consoles[self.active_console].font_index].tile_size;
         let max_sizes = self.consoles[self.active_console].console.get_char_size();
 
         (
             iclamp(
-                (self.mouse_pos.0 as f32 / font_size.0 as f32) as i32,
+                self.mouse_pos.0 * max_sizes.0 as i32 / self.width_pixels as i32,
                 0,
                 max_sizes.0 as i32 - 1,
             ),
             iclamp(
-                (self.mouse_pos.1 as f32 / font_size.1 as f32) as i32,
+                self.mouse_pos.1 * max_sizes.1 as i32 / self.height_pixels as i32,
                 0,
                 max_sizes.1 as i32 - 1,
             ),
