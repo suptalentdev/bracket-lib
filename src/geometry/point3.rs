@@ -1,3 +1,4 @@
+use std::convert::TryInto;
 use std::ops;
 
 #[cfg_attr(
@@ -12,10 +13,22 @@ pub struct Point3 {
     pub z: i32,
 }
 
+#[cfg(feature = "ecs")]
+impl specs::prelude::Component for Point {
+    type Storage = specs::prelude::VecStorage<Self>;
+}
+
 impl Point3 {
     /// Create a new point from an x/y/z coordinate.
-    pub fn new(x: i32, y: i32, z: i32) -> Point3 {
-        Point3 { x, y, z }
+    pub fn new<T>(x: T, y: T, z: T) -> Point3
+    where
+        T: TryInto<i32>,
+    {
+        Point3 {
+            x: x.try_into().ok().unwrap(),
+            y: y.try_into().ok().unwrap(),
+            z: z.try_into().ok().unwrap(),
+        }
     }
 }
 
