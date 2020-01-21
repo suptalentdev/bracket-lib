@@ -1,12 +1,20 @@
 use super::super::super::{Console, GameState, Rltk};
 use super::super::*;
 use glow::HasContext;
-use glutin::{event::Event, event::WindowEvent, event_loop::ControlFlow};
+use glutin::{event::DeviceEvent, event::Event, event::WindowEvent, event_loop::ControlFlow};
 use std::time::Instant;
 
 const TICK_TYPE: ControlFlow = ControlFlow::Poll;
 
 pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
+    unsafe {
+        rltk.backend.platform.gl.viewport(
+            0,
+            0,
+            rltk.width_pixels as i32,
+            rltk.height_pixels as i32,
+        );
+    }
     let now = Instant::now();
     let mut prev_seconds = now.elapsed().as_secs();
     let mut prev_ms = now.elapsed().as_millis();
@@ -20,29 +28,6 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
     let el = unwrap.el;
     let wc = unwrap.wc;
 
-    // RLTK's API exposes, in glutin::dpi terms, a "logical" window size. A
-    // "logical" window size refers to the number of actual pixels on the
-    // screen ("physical" window size) divided by its scaling factor.
-    //
-    // The width_pixels and height_pixels values, as set by RLTK consumers,
-    // must be scaled according to the window's scale factor to account for
-    // screen DPI scaling.
-    //
-    // This same scaling is unnecessary when handling window resize events in
-    // the main event loop, as the event itself contains the properly-scaled
-    // physical size (suitable for direct use with the viewport).
-    //
-    // https://github.com/thebracket/rltk_rs/issues/46
-    let initial_dpi_factor = wc.window().scale_factor();
-    unsafe {
-        rltk.backend.platform.gl.viewport(
-            0,
-            0,
-            (rltk.width_pixels  as f64 * initial_dpi_factor) as i32,
-            (rltk.height_pixels as f64 * initial_dpi_factor) as i32,
-        );
-    }
-
     el.run(move |event, _, control_flow| {
         *control_flow = TICK_TYPE;
 
@@ -54,9 +39,6 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
             Event::NewEvents(_) => {
                 rltk.left_click = false;
                 rltk.key = None;
-                rltk.shift = false;
-                rltk.control = false;
-                rltk.alt = false;
             }
             Event::MainEventsCleared => {
                 tock(
@@ -68,6 +50,14 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                     &now,
                 );
                 wc.swap_buffers().unwrap();
+            }
+            Event::DeviceEvent {
+                event: DeviceEvent::ModifiersChanged(modifiers),
+                ..
+            } => {
+                rltk.shift = modifiers.shift();
+                rltk.alt = modifiers.alt();
+                rltk.control = modifiers.ctrl();
             }
             Event::LoopDestroyed => (),
             Event::WindowEvent { ref event, .. } => match event {
@@ -109,21 +99,11 @@ pub fn main_loop<GS: GameState>(mut rltk: Rltk, mut gamestate: GS) {
                         glutin::event::KeyboardInput {
                             virtual_keycode: Some(virtual_keycode),
                             state: glutin::event::ElementState::Pressed,
-                            modifiers,
                             ..
                         },
                     ..
                 } => {
                     rltk.key = Some(*virtual_keycode);
-                    if modifiers.shift() {
-                        rltk.shift = true;
-                    }
-                    if modifiers.alt() {
-                        rltk.alt = true;
-                    }
-                    if modifiers.ctrl() {
-                        rltk.control = true;
-                    }
                 }
 
                 _ => (),
