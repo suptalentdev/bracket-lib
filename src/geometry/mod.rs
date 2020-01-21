@@ -9,8 +9,6 @@ pub use line_bresenham::Bresenham;
 pub use line_vector::VectorLine;
 mod circle_bresenham;
 pub use circle_bresenham::BresenhamCircle;
-mod rect;
-pub use rect::Rect;
 
 /// Enumeration of available 2D Distance algorithms
 pub enum DistanceAlg {
