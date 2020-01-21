@@ -1,8 +1,18 @@
 rltk::add_wasm_support!();
-use rltk::{Console, GameState, Rltk, VirtualKeyCode, RGB, Point};
+use rltk::{Console, GameState, Rltk, VirtualKeyCode, RGB};
 use specs::prelude::*;
 
 // Define a bunch of components
+
+/// Pos is a screen position
+struct Pos {
+    x: i32,
+    y: i32,
+}
+
+impl Component for Pos {
+    type Storage = VecStorage<Self>;
+}
 
 /// Renderable is a glyph definition
 struct Renderable {
@@ -42,7 +52,7 @@ struct State {
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         // Readable data stores
-        let mut positions = self.ecs.write_storage::<Point>();
+        let mut positions = self.ecs.write_storage::<Pos>();
         let renderables = self.ecs.write_storage::<Renderable>();
         let mut players = self.ecs.write_storage::<Player>();
         let mut babies = self.ecs.write_storage::<BouncingBacy>();
@@ -122,14 +132,14 @@ fn main() {
         saved: 0,
         squished: 0,
     };
-    gs.ecs.register::<Point>();
+    gs.ecs.register::<Pos>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
     gs.ecs.register::<BouncingBacy>();
 
     gs.ecs
         .create_entity()
-        .with(Point { x: 40, y: 49 })
+        .with(Pos { x: 40, y: 49 })
         .with(Renderable {
             glyph: rltk::to_cp437('@'),
             fg: RGB::named(rltk::YELLOW),
@@ -141,10 +151,10 @@ fn main() {
     for i in 0..3 {
         gs.ecs
             .create_entity()
-            .with(Point::new(
-                (i * 22) + 12,
-                gs.rng.roll_dice(1, 20),
-            ))
+            .with(Pos {
+                x: (i * 22) + 12,
+                y: gs.rng.roll_dice(1, 20),
+            })
             .with(Renderable {
                 glyph: rltk::to_cp437('☺'),
                 fg: RGB::named(rltk::MAGENTA),

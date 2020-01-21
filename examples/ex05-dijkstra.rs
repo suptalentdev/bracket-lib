@@ -32,7 +32,7 @@ struct Map {
 struct State {
     map: Map,
     player_position: usize,
-    search_targets: Vec<usize>,
+    search_targets: Vec<i32>,
     flow_map: DijkstraMap,
 }
 
@@ -84,7 +84,7 @@ impl State {
         // are not walls, and aren't revealed
         for i in 0..80 * 50 {
             if !state.map.revealed[i] && state.map.tiles[i] == TileType::Floor {
-                state.search_targets.push(i);
+                state.search_targets.push(i as i32);
             }
         }
 
@@ -102,7 +102,7 @@ impl GameState for State {
         }
 
         // Obtain the player's visible tile set, and apply it
-        let player_position = self.map.index_to_point2d(self.player_position);
+        let player_position = self.map.index_to_point2d(self.player_position as i32);
         let fov = rltk::field_of_view_set(player_position, 8, &self.map);
 
         // Note that the steps above would generally not be run every frame!
@@ -111,8 +111,9 @@ impl GameState for State {
             self.map.visible[mapidx] = true;
             if !self.map.revealed[mapidx] {
                 self.map.revealed[mapidx] = true;
+                let mapidx_i32 = mapidx as i32;
                 // We remove all elements of the search targets list that are now revealed.
-                self.search_targets.retain(|a| a != &mapidx);
+                self.search_targets.retain(|a| a != &mapidx_i32);
             }
         }
 
@@ -126,8 +127,11 @@ impl GameState for State {
         if anything_left {
             // Now we use the flow map to move
             // If its MAX, then there's nowhere to go.
-            let destination =
-                DijkstraMap::find_lowest_exit(&self.flow_map, self.player_position, &self.map);
+            let destination = DijkstraMap::find_lowest_exit(
+                &self.flow_map,
+                self.player_position as i32,
+                &self.map,
+            );
             match destination {
                 None => {}
                 Some(idx) => {
@@ -233,14 +237,14 @@ impl Map {
 }
 
 impl BaseMap for Map {
-    fn is_opaque(&self, idx: usize) -> bool {
+    fn is_opaque(&self, idx: i32) -> bool {
         self.tiles[idx as usize] == TileType::Wall
     }
 
-    fn get_available_exits(&self, idx: usize) -> Vec<(usize, f32)> {
-        let mut exits: Vec<(usize, f32)> = Vec::with_capacity(8);
-        let x = (idx % 80) as i32;
-        let y = (idx / 80) as i32;
+    fn get_available_exits(&self, idx: i32) -> Vec<(i32, f32)> {
+        let mut exits: Vec<(i32, f32)> = Vec::with_capacity(8);
+        let x = idx % 80;
+        let y = idx / 80;
 
         // Cardinal directions
         if self.is_exit_valid(x - 1, y) {
@@ -273,7 +277,7 @@ impl BaseMap for Map {
         exits
     }
 
-    fn get_pathing_distance(&self, idx1: usize, idx2: usize) -> f32 {
+    fn get_pathing_distance(&self, idx1: i32, idx2: i32) -> f32 {
         let p1 = Point::new(idx1 % 80, idx1 / 80);
         let p2 = Point::new(idx2 % 80, idx2 / 80);
         DistanceAlg::Pythagoras.distance2d(p1, p2)
@@ -281,8 +285,11 @@ impl BaseMap for Map {
 }
 
 impl Algorithm2D for Map {
-    fn dimensions(&self) -> Point {
-        Point::new(80, 50)
+    fn point2d_to_index(&self, pt: Point) -> i32 {
+        xy_idx(pt.x, pt.y) as i32
+    }
+    fn index_to_point2d(&self, idx: i32) -> Point {
+        Point::new(idx % 80, idx / 80)
     }
 }
 
