@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::ops;
 
 #[cfg_attr(
-    feature = "serde",
+    feature = "serialization",
     derive(serde::Serialize, serde::Deserialize)
 )]
 #[derive(Eq, PartialEq, Copy, Clone, Debug)]

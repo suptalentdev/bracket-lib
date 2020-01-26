@@ -2,7 +2,7 @@ use super::rex::XpColor;
 use std::ops;
 
 #[cfg_attr(
-    feature = "serde",
+    feature = "serialization",
     derive(serde::Serialize, serde::Deserialize)
 )]
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
