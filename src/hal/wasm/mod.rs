@@ -18,14 +18,12 @@ pub mod shader;
 
 pub struct InitHints {
     pub vsync : bool,
-    pub fullscreen : bool
 }
 
 impl InitHints {
     pub fn new() -> Self {
         Self{
             vsync : true,
-            fullscreen : false
         }
     }
 }
