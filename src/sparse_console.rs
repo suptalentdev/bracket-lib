@@ -22,9 +22,6 @@ pub struct SparseConsole {
     offset_x: f32,
     offset_y: f32,
 
-    scale: f32,
-    scale_center: (i32, i32),
-
     backend: hal::SparseConsoleBackend,
 }
 
@@ -39,8 +36,6 @@ impl SparseConsole {
             is_dirty: true,
             offset_x: 0.0,
             offset_y: 0.0,
-            scale: 1.0,
-            scale_center: (width as i32 / 2, height as i32 / 2),
             backend: hal::SparseConsoleBackend::new(platform, width as usize, height as usize),
         };
 
@@ -54,8 +49,6 @@ impl SparseConsole {
             self.width,
             self.offset_x,
             self.offset_y,
-            self.scale,
-            self.scale_center,
             &self.tiles,
         );
     }
@@ -104,45 +97,59 @@ impl Console for SparseConsole {
     /// Prints a string to an x/y position.
     fn print(&mut self, x: i32, y: i32, output: &str) {
         self.is_dirty = true;
-        let mut idx = self.at(x, y);
 
+        let bounds = self.get_char_size();
         let bytes = super::string_to_cp437(output);
 
-        self.tiles.extend(bytes.into_iter().map(|glyph| {
-            let tile = SparseTile {
-                idx,
-                glyph,
-                fg: RGB::from_f32(1.0, 1.0, 1.0),
-                bg: RGB::from_f32(0.0, 0.0, 0.0),
-            };
-            idx += 1;
-            tile
-        }));
+        self.tiles.extend(
+            bytes
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _)| (*i as i32 + x) < bounds.0 as i32)
+                .map(|(i, glyph)| {
+                    let idx =
+                        (((bounds.1 - 1 - y as u32) * bounds.0) + (x + i as i32) as u32) as usize;
+                    SparseTile {
+                        idx,
+                        glyph,
+                        fg: RGB::from_f32(1.0, 1.0, 1.0),
+                        bg: RGB::from_f32(0.0, 0.0, 0.0),
+                    }
+                }),
+        );
     }
 
     /// Prints a string to an x/y position, with foreground and background colors.
     fn print_color(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, output: &str) {
         self.is_dirty = true;
-        let mut idx = self.at(x, y);
 
+        let bounds = self.get_char_size();
         let bytes = super::string_to_cp437(output);
-        self.tiles.extend(bytes.into_iter().map(|glyph| {
-            let tile = SparseTile { idx, glyph, fg, bg };
-            idx += 1;
-            tile
-        }));
+        self.tiles.extend(
+            bytes
+                .into_iter()
+                .enumerate()
+                .filter(|(i, _)| (*i as i32 + x) < bounds.0 as i32)
+                .map(|(i, glyph)| {
+                    let idx =
+                        (((bounds.1 - 1 - y as u32) * bounds.0) + (x + i as i32) as u32) as usize;
+                    SparseTile { idx, glyph, fg, bg }
+                }),
+        );
     }
 
     /// Sets a single cell in the console
     fn set(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, glyph: u8) {
-        let idx = self.at(x, y);
-        self.tiles.push(SparseTile { idx, glyph, fg, bg });
+        if let Some(idx) = self.try_at(x, y) {
+            self.tiles.push(SparseTile { idx, glyph, fg, bg });
+        }
     }
 
     /// Sets a single cell in the console's background
     fn set_bg(&mut self, x: i32, y: i32, bg: RGB) {
-        let idx = self.at(x, y);
-        self.tiles[idx].bg = bg;
+        if let Some(idx) = self.try_at(x, y) {
+            self.tiles[idx].bg = bg;
+        }
     }
 
     /// Draws a box, starting at x/y with the extents width/height using CP437 line characters
@@ -268,11 +275,6 @@ impl Console for SparseConsole {
     fn set_offset(&mut self, x: f32, y: f32) {
         self.offset_x = x * (2.0 / self.width as f32);
         self.offset_y = y * (2.0 / self.height as f32);
-    }
-
-    fn set_scale(&mut self, scale: f32, center_x: i32, center_y: i32) {
-        self.scale = scale;
-        self.scale_center = (center_x, center_y);
     }
 
     fn as_any(&self) -> &dyn Any {
