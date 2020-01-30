@@ -50,8 +50,6 @@ pub mod embedding;
 pub use command_buffer::*;
 mod initializer;
 pub use initializer::*;
-mod multi_tile_sprite;
-pub use multi_tile_sprite::*;
 
 pub mod prelude {
     pub use crate::*;

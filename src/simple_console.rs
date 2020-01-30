@@ -13,6 +13,9 @@ pub struct SimpleConsole {
     offset_x: f32,
     offset_y: f32,
 
+    scale: f32,
+    scale_center: (i32, i32),
+
     backend: hal::SimpleConsoleBackend,
 }
 
@@ -37,6 +40,8 @@ impl SimpleConsole {
             is_dirty: true,
             offset_x: 0.0,
             offset_y: 0.0,
+            scale: 1.0,
+            scale_center: (width as i32 / 2, height as i32 / 2),
             backend: hal::SimpleConsoleBackend::new(platform, width as usize, height as usize),
         };
 
@@ -51,6 +56,8 @@ impl SimpleConsole {
             &self.tiles,
             self.offset_x,
             self.offset_y,
+            self.scale,
+            self.scale_center,
         );
     }
 }
@@ -80,7 +87,6 @@ impl Console for SimpleConsole {
     }
 
     /// Translate an x/y into an array index.
-    #[inline]
     fn at(&self, x: i32, y: i32) -> usize {
         (((self.height - 1 - y as u32) * self.width) + x as u32) as usize
     }
@@ -106,46 +112,47 @@ impl Console for SimpleConsole {
     }
 
     /// Prints a string at x/y.
-    fn print(&mut self, mut x: i32, y: i32, output: &str) {
+    fn print(&mut self, x: i32, y: i32, output: &str) {
         self.is_dirty = true;
+        let mut idx = self.at(x, y);
+
         let bytes = super::string_to_cp437(output);
         for glyph in bytes {
-            if let Some(idx) = self.try_at(x, y) {
+            if idx < self.tiles.len() {
                 self.tiles[idx].glyph = glyph;
+                idx += 1;
             }
-            x += 1;
         }
     }
 
     /// Prints a string at x/y, with foreground and background colors.
-    fn print_color(&mut self, mut x: i32, y: i32, fg: RGB, bg: RGB, output: &str) {
+    fn print_color(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, output: &str) {
         self.is_dirty = true;
+        let mut idx = self.at(x, y);
 
         let bytes = super::string_to_cp437(output);
         for glyph in bytes {
-            if let Some(idx) = self.try_at(x, y) {
+            if idx < self.tiles.len() {
                 self.tiles[idx].glyph = glyph;
                 self.tiles[idx].bg = bg;
                 self.tiles[idx].fg = fg;
+                idx += 1;
             }
-            x += 1;
         }
     }
 
     /// Sets a single cell in the console
     fn set(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, glyph: u8) {
-        if let Some(idx) = self.try_at(x, y) {
-            self.tiles[idx].glyph = glyph;
-            self.tiles[idx].fg = fg;
-            self.tiles[idx].bg = bg;
-        }
+        let idx = self.at(x, y);
+        self.tiles[idx].glyph = glyph;
+        self.tiles[idx].fg = fg;
+        self.tiles[idx].bg = bg;
     }
 
     /// Sets a single cell in the console's background
     fn set_bg(&mut self, x: i32, y: i32, bg: RGB) {
-        if let Some(idx) = self.try_at(x, y) {
-            self.tiles[idx].bg = bg;
-        }
+        let idx = self.at(x, y);
+        self.tiles[idx].bg = bg;
     }
 
     /// Draws a box, starting at x/y with the extents width/height using CP437 line characters
@@ -185,7 +192,7 @@ impl Console for SimpleConsole {
 
     /// Gets the content of a cell
     fn get(&self, x: i32, y: i32) -> Option<(&u8, &RGB, &RGB)> {
-        if self.in_bounds(x, y) {
+        if x < self.width as i32 && y < self.height as i32 {
             let idx = self.at(x, y);
             Some((
                 &self.tiles[idx].glyph,
@@ -270,6 +277,11 @@ impl Console for SimpleConsole {
     fn set_offset(&mut self, x: f32, y: f32) {
         self.offset_x = x * (2.0 / self.width as f32);
         self.offset_y = y * (2.0 / self.height as f32);
+    }
+
+    fn set_scale(&mut self, scale: f32, center_x: i32, center_y: i32) {
+        self.scale = scale;
+        self.scale_center = (center_x, center_y);
     }
 
     fn as_any(&self) -> &dyn Any {

@@ -36,5 +36,4 @@ jobs:
         cargo check --example ex14-dwarfmap  --features "opengl"
         cargo check --example ex15-specs  --features "opengl, specs"
         cargo check --example ex16-keyboard  --features "opengl"
-        cargo check --example ex18-textsprites --features "opengl"
 
