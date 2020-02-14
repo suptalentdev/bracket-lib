@@ -20,6 +20,11 @@ enum ConsoleType {
         height: u32,
         font: String,
     },
+    SparseConsoleNoBg {
+        width: u32,
+        height: u32,
+        font: String,
+    },
 }
 
 /// Provides a builder mechanism for initializing RLTK. You can chain builders together,
@@ -248,6 +253,19 @@ impl RltkBuilder {
         self
     }
 
+    /// Adds a sparse console with no bg rendering layer to the RLTK builder.
+    pub fn with_sparse_console_no_bg<S: ToString, T>(mut self, width: T, height: T, font: S) -> Self
+    where
+        T: TryInto<u32>,
+    {
+        self.consoles.push(ConsoleType::SparseConsoleNoBg {
+            width: width.try_into().ok().unwrap(),
+            height: height.try_into().ok().unwrap(),
+            font: font.to_string(),
+        });
+        self
+    }
+
     /// Enables you to override the vsync default for native rendering.
     pub fn with_vsync(mut self, vsync: bool) -> Self {
         self.platform_hints.vsync = vsync;
@@ -263,6 +281,12 @@ impl RltkBuilder {
     /// Push platform-specific initialization hints to the builder. THIS REMOVES CROSS-PLATFORM COMPATIBILITY
     pub fn with_platform_specific(mut self, hints: InitHints) -> Self {
         self.platform_hints = hints;
+        self
+    }
+
+    /// Instructs the back-end (not all of them honor it; WASM and Amethyst do their own thing) to try to limit frame-rate and CPU utilization.
+    pub fn with_fps_cap(mut self, fps: f32) -> Self {
+        self.platform_hints.frame_sleep_time = Some(1.0 / fps);
         self
     }
 
@@ -304,6 +328,18 @@ impl RltkBuilder {
                     let font_path = format!("{}/{}", self.resource_path, font);
                     let font_id = font_map[&font_path];
                     context.register_console(
+                        SparseConsole::init(*width, *height, &context.backend),
+                        font_id,
+                    );
+                }
+                ConsoleType::SparseConsoleNoBg {
+                    width,
+                    height,
+                    font,
+                } => {
+                    let font_path = format!("{}/{}", self.resource_path, font);
+                    let font_id = font_map[&font_path];
+                    context.register_console_no_bg(
                         SparseConsole::init(*width, *height, &context.backend),
                         font_id,
                     );
