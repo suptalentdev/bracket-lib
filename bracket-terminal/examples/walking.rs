@@ -167,8 +167,7 @@ impl GameState for State {
 fn main() {
     let context = BTermBuilder::simple80x50()
         .with_title("Bracket Terminal Example - Walking")
-        .build()
-        .unwrap();
+        .build();
     let gs = State::new();
-    main_loop(context, gs).unwrap();
+    main_loop(context, gs);
 }

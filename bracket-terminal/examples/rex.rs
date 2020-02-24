@@ -36,8 +36,7 @@ fn main() {
 
     let context = BTermBuilder::simple80x50()
         .with_title("Bracket Terminal Example - REX Paint, Hello Nyan Cat")
-        .build()
-        .unwrap();
+        .build();
     let gs: State = State { nyan: xp };
-    main_loop(context, gs).unwrap();
+    main_loop(context, gs);
 }

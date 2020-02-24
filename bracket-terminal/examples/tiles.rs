@@ -167,9 +167,9 @@ impl GameState for State {
             2,
         );
 
-        draw_batch.submit(0).unwrap();
+        draw_batch.submit(0);
 
-        render_draw_buffer(ctx).unwrap();
+        render_draw_buffer(ctx);
     }
 }
 
@@ -205,9 +205,8 @@ fn main() {
         // We also want a sparse console atop it to handle moving the character
         .with_sparse_console(WIDTH as u32, HEIGHT as u32, "example_tiles.png")
         // And we call the builder function
-        .build()
-        .unwrap();
+        .build();
 
     let gs = State::new();
-    main_loop(context, gs).unwrap();
+    main_loop(context, gs);
 }

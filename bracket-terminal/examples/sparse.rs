@@ -57,9 +57,9 @@ impl GameState for State {
             &format!("Frame Time: {} ms", ctx.frame_time_ms),
             ColorPair::new(RGB::named(CYAN), RGB::named(BLACK)),
         );
-        draw_batch.submit(0).unwrap();
+        draw_batch.submit(0);
 
-        render_draw_buffer(ctx).unwrap();
+        render_draw_buffer(ctx);
     }
 }
 
@@ -68,13 +68,12 @@ fn main() {
         .with_font("vga8x16.png", 8u32, 16u32)
         .with_sparse_console(80u32, 25u32, "vga8x16.png")
         .with_title("Bracket Terminal - Sparse Consoles")
-        .build()
-        .unwrap();
+        .build();
 
     let gs = State {
         y: 1,
         going_down: true,
     };
 
-    main_loop(context, gs).unwrap();
+    main_loop(context, gs);
 }

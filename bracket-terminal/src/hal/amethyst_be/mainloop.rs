@@ -1,4 +1,3 @@
-use crate::Result;
 use crate::prelude::{GameState, BTerm};
 
 use amethyst::{
@@ -30,7 +29,7 @@ impl SimpleState for BTermGemBridge {
         let world = data.world;
         world.register::<SimpleConsoleLink>();
         self.make_camera(world);
-        super::font::initialize_fonts(&mut self.bterm, world).unwrap();
+        super::font::initialize_fonts(&mut self.bterm, world);
         self.initialize_console_objects(world);
     }
 
@@ -249,14 +248,14 @@ impl BTermGemBridge {
     }
 }
 
-pub fn main_loop<GS: GameState>(bterm: BTerm, gamestate: GS) -> Result<()> {
+pub fn main_loop<GS: GameState>(bterm: BTerm, gamestate: GS) {
     amethyst::start_logger(Default::default());
 
     let mut cfg = amethyst::window::DisplayConfig::default();
     cfg.dimensions = Some((bterm.width_pixels, bterm.height_pixels));
     cfg.title = bterm.backend.platform.window_title.clone();
 
-    let app_root = application_root_dir()?;
+    let app_root = application_root_dir().unwrap();
 
     let input_bundle = InputBundle::<StringBindings>::new().with_bindings(Bindings::new());
 
@@ -287,7 +286,6 @@ pub fn main_loop<GS: GameState>(bterm: BTerm, gamestate: GS) -> Result<()> {
     )
     .expect("Failed to make game data");
     game.run();
-    Ok(())
 }
 
 #[derive(Clone, Debug)]

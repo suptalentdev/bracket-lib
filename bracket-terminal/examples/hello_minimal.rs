@@ -33,13 +33,12 @@ fn main() {
     // with the baked-in 8x8 terminal font.
     let context = BTermBuilder::simple80x50()
         .with_title("Hello Minimal Bracket World")
-        .build()
-        .unwrap();
+        .build();
 
     // Now we create an empty state object.
     let gs: State = State {};
 
     // Call into BTerm to run the main loop. This handles rendering, and calls back into State's tick
     // function every cycle. The box is needed to work around lifetime handling.
-    main_loop(context, gs).unwrap();
+    main_loop(context, gs);
 }

@@ -1,4 +1,3 @@
-use crate::Result;
 use crate::hal::BTermPlatform;
 use crate::prelude::InitHints;
 use crate::prelude::BTerm;
@@ -13,8 +12,8 @@ pub fn init_raw<S: ToString>(
     height_pixels: u32,
     window_title: S,
     platform_hints: InitHints,
-) -> Result<BTerm> {
-    let bterm = BTerm {
+) -> BTerm {
+    BTerm {
         backend: BTermPlatform {
             platform: PlatformGL {
                 window_title: window_title.to_string(),
@@ -39,6 +38,5 @@ pub fn init_raw<S: ToString>(
         quitting: false,
         post_scanlines: false,
         post_screenburn: false,
-    };
-    Ok(bterm)
+    }
 }

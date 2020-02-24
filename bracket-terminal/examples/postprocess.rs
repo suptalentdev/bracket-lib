@@ -53,13 +53,12 @@ fn main() {
 
     let mut context = BTermBuilder::simple80x50()
         .with_title("Bracket Terminal Example - Post-Processing Effects")
-        .build()
-        .unwrap();
+        .build();
 
     context.with_post_scanlines(true);
     let gs: State = State {
         nyan: xp,
         burn: true,
     };
-    main_loop(context, gs).unwrap();
+    main_loop(context, gs);
 }
