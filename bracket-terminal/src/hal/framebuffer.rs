@@ -1,4 +1,3 @@
-use crate::Result;
 use glow::HasContext;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -15,14 +14,14 @@ pub struct Framebuffer {
 
 impl Framebuffer {
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn build_fbo(gl: &glow::Context, width: i32, height: i32) -> Result<Framebuffer> {
+    pub fn build_fbo(gl: &glow::Context, width: i32, height: i32) -> Framebuffer {
         let fbo;
         let buffer;
 
         unsafe {
-            fbo = gl.create_framebuffer()?;
+            fbo = gl.create_framebuffer().unwrap();
             gl.bind_framebuffer(glow::FRAMEBUFFER, Some(fbo));
-            buffer = gl.create_texture()?;
+            buffer = gl.create_texture().unwrap();
 
             gl.bind_texture(glow::TEXTURE_2D, Some(buffer));
             gl.tex_image_2d(
@@ -67,11 +66,10 @@ impl Framebuffer {
             gl.bind_framebuffer(glow::FRAMEBUFFER, None);
         }
 
-        let framebuffer = Framebuffer {
+        Framebuffer {
             fbo,
             texture: buffer,
-        };
-        Ok(framebuffer)
+        }
     }
 
     #[cfg(target_arch = "wasm32")]

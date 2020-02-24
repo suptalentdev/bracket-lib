@@ -1,4 +1,3 @@
-use crate::Result;
 use crate::prelude::{InitHints, BTerm, BTermPlatform};
 use glutin::{dpi::LogicalSize, event_loop::EventLoop, window::WindowBuilder, ContextBuilder};
 use crate::hal::native::{WrappedContext, PlatformGL, setup_quad, shader::Shader, shader_strings};
@@ -9,7 +8,7 @@ pub fn init_raw<S: ToString>(
     height_pixels: u32,
     window_title: S,
     platform_hints: InitHints,
-) -> Result<BTerm> {
+) -> BTerm {
 
     let el = EventLoop::new();
     let wb = WindowBuilder::new()
@@ -24,17 +23,15 @@ pub fn init_raw<S: ToString>(
         .with_hardware_acceleration(Some(true))
         .with_vsync(platform_hints.vsync)
         .with_srgb(platform_hints.srgb)
-        .build_windowed(wb, &el)?;
+        .build_windowed(wb, &el)
+        .unwrap();
     let windowed_context = unsafe { windowed_context.make_current().unwrap() };
 
     if platform_hints.fullscreen {
-        if let Some(mh) = el.available_monitors().nth(0) {
-            windowed_context
-                .window()
-                .set_fullscreen(Some(glutin::window::Fullscreen::Borderless(mh)));
-        } else {
-            return Err("No available monitor found".into());
-        }
+        let mh = el.available_monitors().nth(0).unwrap();
+        windowed_context
+            .window()
+            .set_fullscreen(Some(glutin::window::Fullscreen::Borderless(mh)));
     }
 
     let gl = glow::Context::from_loader_function(|ptr| {
@@ -71,12 +68,12 @@ pub fn init_raw<S: ToString>(
         &gl,
         (width_pixels as f64 * initial_dpi_factor) as i32,
         (height_pixels as f64 * initial_dpi_factor) as i32,
-    )?;
+    );
 
     // Build a simple quad rendering vao
     let quad_vao = setup_quad(&gl);
 
-    let bterm = BTerm {
+    BTerm {
         backend: BTermPlatform {
             platform: PlatformGL {
                 gl,
@@ -107,6 +104,5 @@ pub fn init_raw<S: ToString>(
         quitting: false,
         post_scanlines: false,
         post_screenburn: false,
-    };
-    Ok(bterm)
+    }
 }
