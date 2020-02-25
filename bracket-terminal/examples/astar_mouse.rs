@@ -177,8 +177,8 @@ impl GameState for State {
         );
 
         // Submit the rendering
-        draw_batch.submit(0).expect("Batch error");
-        render_draw_buffer(ctx).expect("Render error");
+        draw_batch.submit(0);
+        render_draw_buffer(ctx);
     }
 }
 
@@ -236,10 +236,10 @@ impl Algorithm2D for State {
     }
 }
 
-fn main() -> BError {
+fn main() {
     let context = BTermBuilder::simple80x50()
         .with_title("Bracket Terminal Example - A* Mouse")
-        .build()?;
+        .build();
     let gs = State::new();
-    main_loop(context, gs)
+    main_loop(context, gs);
 }

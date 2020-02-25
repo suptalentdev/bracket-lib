@@ -50,7 +50,7 @@ impl State {
     }
 }
 
-fn main() -> RltkError {
+fn main() {
     let mut gs: State = State {
         colors: vec![RGB::from_f32(0., 0., 0.); 80 * 50],
         counter: 0,
@@ -60,6 +60,6 @@ fn main() -> RltkError {
 
     let context = RltkBuilder::simple80x50()
         .with_title("RLTK Example 12 - Perlin Noise")
-        .build()?;
-    rltk::main_loop(context, gs)
+        .build();
+    rltk::main_loop(context, gs);
 }

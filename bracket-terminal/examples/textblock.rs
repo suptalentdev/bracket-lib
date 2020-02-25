@@ -34,11 +34,11 @@ impl GameState for State {
     }
 }
 
-fn main() -> BError {
+fn main() {
     let gs: State = State {};
 
     let context = BTermBuilder::simple80x50()
         .with_title("Bracket Terminal Example - Text Blocks")
-        .build()?;
-    main_loop(context, gs)
+        .build();
+    main_loop(context, gs);
 }

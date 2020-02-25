@@ -170,10 +170,10 @@ impl GameState for State {
     }
 }
 
-fn main() -> RltkError {
+fn main() {
     let context = RltkBuilder::simple80x50()
         .with_title("RLTK Example 3 - Walking")
-        .build()?;
+        .build();
     let gs = State::new();
-    rltk::main_loop(context, gs)
+    rltk::main_loop(context, gs);
 }

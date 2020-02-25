@@ -1,5 +1,4 @@
 // Dummy platform to let it compile and do nothing. Only useful if you don't want a graphical backend.
-use crate::Result;
 use crate::prelude::{GameState, BTerm};
 use bracket_color::prelude::*;
 
@@ -43,7 +42,6 @@ pub mod shader {
 }
 
 pub mod font {
-    use crate::Result;
     pub struct Font {
         pub tile_size: (u32, u32),
     }
@@ -53,9 +51,7 @@ pub mod font {
             Font { tile_size: (1, 1) }
         }
 
-        pub fn setup_gl_texture(&mut self, _gl: &crate::hal::BTermPlatform) -> Result<()> {
-            Ok(())
-        }
+        pub fn setup_gl_texture(&mut self, _gl: &crate::hal::BTermPlatform) {}
 
         pub fn bind_texture(&self, _gl: &crate::hal::BTermPlatform) {}
     }
@@ -88,7 +84,7 @@ pub fn init_raw<S: ToString>(
     height_pixels: u32,
     _window_title: S,
     platform_hints: InitHints,
-) -> Result<BTerm> {
+) -> BTerm {
     let window = initscr();
     resize_term(height_pixels as i32 / 8, width_pixels as i32 / 8);
     noecho();
@@ -115,7 +111,7 @@ pub fn init_raw<S: ToString>(
         }
     }
 
-    let bterm = BTerm {
+    BTerm {
         backend: super::BTermPlatform {
             platform: PlatformGL {
                 window,
@@ -141,8 +137,7 @@ pub fn init_raw<S: ToString>(
         quitting: false,
         post_scanlines: false,
         post_screenburn: false,
-    };
-    Ok(bterm)
+    }
 }
 
 fn find_nearest_color(color: RGB, map: &[CursesColor]) -> i16 {

@@ -167,9 +167,9 @@ impl GameState for State {
             2,
         );
 
-        draw_batch.submit(0).expect("Batch error");
+        draw_batch.submit(0);
 
-        render_draw_buffer(ctx).expect("Render error");
+        render_draw_buffer(ctx);
     }
 }
 
@@ -187,7 +187,7 @@ impl Algorithm2D for State {
 
 bracket_terminal::embedded_resource!(TILE_FONT, "../resources/example_tiles.png");
 
-fn main() -> BError {
+fn main() {
     bracket_terminal::link_resource!(TILE_FONT, "resources/example_tiles.png");
 
     // This initialization is a bit more complicated than the previous examples.
@@ -205,8 +205,8 @@ fn main() -> BError {
         // We also want a sparse console atop it to handle moving the character
         .with_sparse_console(WIDTH as u32, HEIGHT as u32, "example_tiles.png")
         // And we call the builder function
-        .build()?;
+        .build();
 
     let gs = State::new();
-    main_loop(context, gs)
+    main_loop(context, gs);
 }

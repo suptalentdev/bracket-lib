@@ -1,4 +1,3 @@
-use crate::Result;
 use crate::prelude::{init_raw, BTerm, InitHints, SimpleConsole, SparseConsole, font::Font};
 use std::collections::HashMap;
 use std::convert::TryInto;
@@ -86,12 +85,12 @@ impl BTermBuilder {
     }
 
     /// Provides an 8x8 terminal font simple console, with the specified dimensions as your starting point.
-    pub fn simple<T>(width: T, height: T) -> Result<Self>
+    pub fn simple<T>(width: T, height: T) -> Self
     where
         T: TryInto<u32>,
     {
-        let w: u32 = width.try_into().or(Err("Must be convertible to a u32"))?;
-        let h: u32 = height.try_into().or(Err("Must be convertible to a u32"))?;
+        let w: u32 = width.try_into().ok().expect("Must be convertible to a u32");
+        let h: u32 = height.try_into().ok().expect("Must be convertible to a u32");
         let mut cb = BTermBuilder {
             width: w,
             height: h,
@@ -112,7 +111,7 @@ impl BTermBuilder {
             height: h,
             font: "terminal8x8.png".to_string(),
         });
-        Ok(cb)
+        cb
     }
 
     /// Provides an 80x50 terminal, in the VGA font as your starting point.
@@ -292,19 +291,19 @@ impl BTermBuilder {
     }
 
     /// Combine all of the builder parameters, and return an BTerm context ready to go.
-    pub fn build(self) -> Result<BTerm> {
+    pub fn build(self) -> BTerm {
         let mut context = init_raw(
             self.width * self.tile_width,
             self.height * self.tile_height,
             self.title.unwrap_or("BTerm Window".to_string()),
             self.platform_hints,
-        )?;
+        );
 
         let mut font_map: HashMap<String, usize> = HashMap::new();
         for font in &self.fonts {
             let font_path = format!("{}/{}", self.resource_path, font.path);
             let font_id = context.register_font(Font::load(font_path.clone(), font.dimensions));
-            font_map.insert(font_path, font_id?);
+            font_map.insert(font_path, font_id);
         }
 
         for console in &self.consoles {
@@ -348,6 +347,6 @@ impl BTermBuilder {
             }
         }
 
-        Ok(context)
+        context
     }
 }
