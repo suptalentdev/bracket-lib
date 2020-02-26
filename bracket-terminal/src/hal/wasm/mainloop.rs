@@ -1,9 +1,8 @@
+use crate::prelude::{GameState, BTerm};
 use super::events::*;
-use crate::prelude::{BTerm, GameState};
-use crate::Result;
 use glow::HasContext;
 
-pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<()> {
+pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) {
     use glow::HasRenderLoop;
 
     let now = wasm_timer::Instant::now();
@@ -44,7 +43,6 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
             GLOBAL_BUTTON = None;
         }
     });
-    Ok(())
 }
 
 fn tock<GS: GameState>(

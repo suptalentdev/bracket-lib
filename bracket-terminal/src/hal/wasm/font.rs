@@ -1,5 +1,4 @@
 use crate::prelude::embedding;
-use crate::Result;
 use glow::HasContext;
 use image::{ColorType, GenericImageView};
 
@@ -56,7 +55,7 @@ impl Font {
     pub fn setup_gl_texture(
         &mut self,
         platform: &super::super::BTermPlatform,
-    ) -> Result<glow::WebTextureKey> {
+    ) -> glow::WebTextureKey {
         let gl = &platform.platform.gl;
         let texture;
 
@@ -114,7 +113,7 @@ impl Font {
 
         self.gl_id = Some(texture);
 
-        Ok(texture)
+        texture
     }
 
     /// Sets this font file as the active texture
