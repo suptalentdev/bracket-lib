@@ -1,6 +1,6 @@
 use super::events::*;
 use crate::prelude::{BTerm, GameState, SimpleConsole, SparseConsole};
-use crate::{Result, clear_input_state};
+use crate::Result;
 use glow::HasContext;
 use super::*;
 
@@ -46,7 +46,8 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
         );
 
         // Clear any input
-        clear_input_state(&mut bterm);
+        bterm.left_click = false;
+        bterm.key = None;
         unsafe {
             GLOBAL_KEY = None;
             GLOBAL_MODIFIERS = (false, false, false);
@@ -159,7 +160,7 @@ fn render_consoles(bterm: &mut BTerm) -> Result<()> {
     for (i, c) in consoles.iter_mut().enumerate() {
         let cons = &bterm.consoles[i];
         let font = &bterm.fonts[cons.font_index];
-        let shader = &bterm.shaders[cons.shader_index];
+        let shader = &bterm.shaders[0];
         match c {
             ConsoleBacking::Simple { backing } => {
                 unsafe {

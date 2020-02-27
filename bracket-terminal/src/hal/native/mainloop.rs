@@ -1,7 +1,7 @@
 use super::{BACKEND, CONSOLE_BACKING};
 use crate::hal::*;
 use crate::prelude::{BTerm, Console, GameState, SimpleConsole, SparseConsole};
-use crate::{Result, clear_input_state};
+use crate::Result;
 use glow::HasContext;
 use glutin::{event::DeviceEvent, event::Event, event::WindowEvent, event_loop::ControlFlow};
 use std::time::Instant;
@@ -55,7 +55,8 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
 
         match event {
             Event::NewEvents(_) => {
-                clear_input_state(&mut bterm);
+                bterm.left_click = false;
+                bterm.key = None;
             }
             Event::MainEventsCleared => {
                 wc.window().request_redraw();
