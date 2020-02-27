@@ -1,11 +1,12 @@
-use crate::prelude::{InitHints, BTerm};
+use crate::prelude::{BTerm, InitHints};
+use crate::Result;
 
 pub fn init_raw<S: ToString>(
     width_pixels: u32,
     height_pixels: u32,
     _window_title: S,
     _platform_hints: InitHints,
-) -> BTerm {
+) -> Result<BTerm> {
     use super::super::*;
     use super::*;
     use wasm_bindgen::JsCast;
@@ -46,14 +47,11 @@ pub fn init_raw<S: ToString>(
 
     let quad_vao = quadrender::setup_quad(&gl);
 
-    BTerm {
-        backend: BTermPlatform {
-            platform: PlatformGL {
-                gl,
-                context_wrapper: Some(WrappedContext {}),
-                quad_vao: quad_vao,
-            },
-        },
+    let mut be = BACKEND.lock().unwrap();
+    be.gl = Some(gl);
+    be.quad_vao = Some(quad_vao);
+
+    Ok(BTerm {
         width_pixels,
         height_pixels,
         fonts: Vec::new(),
@@ -72,5 +70,5 @@ pub fn init_raw<S: ToString>(
         quitting: false,
         post_scanlines: false,
         post_screenburn: false,
-    }
+    })
 }

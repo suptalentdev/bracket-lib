@@ -1,7 +1,7 @@
-use crate::prelude::{Console, font::Font, Shader, XpLayer, string_to_cp437, BTermPlatform, SparseConsoleBackend};
-use std::any::Any;
-use bracket_color::prelude::{RGB, XpColor};
+use crate::prelude::{string_to_cp437, Console, XpLayer};
+use bracket_color::prelude::{XpColor, RGB};
 use bracket_geometry::prelude::Rect;
+use std::any::Any;
 
 /// Internal storage structure for sparse tiles.
 pub struct SparseTile {
@@ -21,18 +21,16 @@ pub struct SparseConsole {
     pub is_dirty: bool,
 
     // To handle offset tiles for people who want thin walls between tiles
-    offset_x: f32,
-    offset_y: f32,
+    pub offset_x: f32,
+    pub offset_y: f32,
 
-    scale: f32,
-    scale_center: (i32, i32),
-
-    backend: SparseConsoleBackend,
+    pub scale: f32,
+    pub scale_center: (i32, i32),
 }
 
 impl SparseConsole {
     /// Initializes the console.
-    pub fn init(width: u32, height: u32, platform: &BTermPlatform) -> Box<SparseConsole> {
+    pub fn init(width: u32, height: u32) -> Box<SparseConsole> {
         // Console backing init
         let new_console = SparseConsole {
             width,
@@ -43,47 +41,19 @@ impl SparseConsole {
             offset_y: 0.0,
             scale: 1.0,
             scale_center: (width as i32 / 2, height as i32 / 2),
-            backend: SparseConsoleBackend::new(platform, width as usize, height as usize),
         };
 
         Box::new(new_console)
     }
-
-    fn rebuild_vertices(&mut self, platform: &BTermPlatform) {
-        self.backend.rebuild_vertices(
-            platform,
-            self.height,
-            self.width,
-            self.offset_x,
-            self.offset_y,
-            self.scale,
-            self.scale_center,
-            &self.tiles,
-        );
-    }
 }
 
 impl Console for SparseConsole {
-    /// If the console has changed, rebuild the vertex buffer.
-    fn rebuild_if_dirty(&mut self, platform: &BTermPlatform) {
-        if self.is_dirty {
-            self.rebuild_vertices(platform);
-            self.is_dirty = false;
-        }
-    }
-
     fn get_char_size(&self) -> (u32, u32) {
         (self.width, self.height)
     }
 
     fn resize_pixels(&mut self, _width: u32, _height: u32) {
         self.is_dirty = true;
-    }
-
-    /// Draws the console to OpenGL.
-    fn gl_draw(&mut self, font: &Font, shader: &Shader, platform: &BTermPlatform) {
-        self.backend.gl_draw(font, shader, platform, &self.tiles).unwrap();
-        self.is_dirty = false;
     }
 
     /// Translates x/y to an index entry. Not really useful.
@@ -149,6 +119,7 @@ impl Console for SparseConsole {
 
     /// Sets a single cell in the console
     fn set(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, glyph: u8) {
+        self.is_dirty = true;
         if let Some(idx) = self.try_at(x, y) {
             self.tiles.push(SparseTile { idx, glyph, fg, bg });
         }
@@ -157,6 +128,7 @@ impl Console for SparseConsole {
     /// Sets a single cell in the console's background
     fn set_bg(&mut self, x: i32, y: i32, bg: RGB) {
         if let Some(idx) = self.try_at(x, y) {
+            self.is_dirty = true;
             self.tiles[idx].bg = bg;
         }
     }
@@ -282,11 +254,13 @@ impl Console for SparseConsole {
     /// draw between tiles. Offsets are specified as a percentage of total
     /// character size; so -0.5 will offset half a character to the left/top.
     fn set_offset(&mut self, x: f32, y: f32) {
+        self.is_dirty = true;
         self.offset_x = x * (2.0 / self.width as f32);
         self.offset_y = y * (2.0 / self.height as f32);
     }
 
     fn set_scale(&mut self, scale: f32, center_x: i32, center_y: i32) {
+        self.is_dirty = true;
         self.scale = scale;
         self.scale_center = (center_x, center_y);
     }

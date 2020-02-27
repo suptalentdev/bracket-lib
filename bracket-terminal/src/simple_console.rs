@@ -1,7 +1,7 @@
-use crate::prelude::{Console, font::Font, Shader, Tile, XpLayer, string_to_cp437, SimpleConsoleBackend, BTermPlatform};
-use std::any::Any;
+use crate::prelude::{string_to_cp437, Console, Tile, XpLayer};
 use bracket_color::prelude::*;
 use bracket_geometry::prelude::Rect;
+use std::any::Any;
 
 /// A simple console with background color.
 pub struct SimpleConsole {
@@ -12,18 +12,16 @@ pub struct SimpleConsole {
     pub is_dirty: bool,
 
     // To handle offset tiles for people who want thin walls between tiles
-    offset_x: f32,
-    offset_y: f32,
+    pub offset_x: f32,
+    pub offset_y: f32,
 
-    scale: f32,
-    scale_center: (i32, i32),
-
-    backend: SimpleConsoleBackend,
+    pub scale: f32,
+    pub scale_center: (i32, i32),
 }
 
 impl SimpleConsole {
     /// Initializes a console, ready to add to BTerm's console list.
-    pub fn init(width: u32, height: u32, platform: &BTermPlatform) -> Box<SimpleConsole> {
+    pub fn init(width: u32, height: u32) -> Box<SimpleConsole> {
         // Console backing init
         let num_tiles: usize = (width * height) as usize;
         let mut tiles: Vec<Tile> = Vec::with_capacity(num_tiles);
@@ -44,48 +42,19 @@ impl SimpleConsole {
             offset_y: 0.0,
             scale: 1.0,
             scale_center: (width as i32 / 2, height as i32 / 2),
-            backend: SimpleConsoleBackend::new(platform, width as usize, height as usize),
         };
 
         Box::new(new_console)
     }
-
-    fn rebuild_vertices(&mut self, platform: &BTermPlatform) {
-        self.backend.rebuild_vertices(
-            platform,
-            self.height,
-            self.width,
-            &self.tiles,
-            self.offset_x,
-            self.offset_y,
-            self.scale,
-            self.scale_center,
-        );
-    }
 }
 
 impl Console for SimpleConsole {
-    /// Check if the console has changed, and if it has rebuild the backing buffer.
-    fn rebuild_if_dirty(&mut self, platform: &BTermPlatform) {
-        if self.is_dirty {
-            self.rebuild_vertices(platform);
-            self.is_dirty = false;
-        }
-    }
-
     fn get_char_size(&self) -> (u32, u32) {
         (self.width, self.height)
     }
 
     fn resize_pixels(&mut self, _width: u32, _height: u32) {
         self.is_dirty = true;
-    }
-
-    /// Sends the console to OpenGL.
-    fn gl_draw(&mut self, font: &Font, shader: &Shader, platform: &BTermPlatform) {
-        self.backend
-            .gl_draw(font, shader, platform, self.width, self.height).unwrap();
-        self.is_dirty = false;
     }
 
     /// Translate an x/y into an array index.
@@ -143,6 +112,7 @@ impl Console for SimpleConsole {
 
     /// Sets a single cell in the console
     fn set(&mut self, x: i32, y: i32, fg: RGB, bg: RGB, glyph: u8) {
+        self.is_dirty = true;
         if let Some(idx) = self.try_at(x, y) {
             self.tiles[idx].glyph = glyph;
             self.tiles[idx].fg = fg;
@@ -152,6 +122,7 @@ impl Console for SimpleConsole {
 
     /// Sets a single cell in the console's background
     fn set_bg(&mut self, x: i32, y: i32, bg: RGB) {
+        self.is_dirty = true;
         if let Some(idx) = self.try_at(x, y) {
             self.tiles[idx].bg = bg;
         }
@@ -277,11 +248,13 @@ impl Console for SimpleConsole {
     /// draw between tiles. Offsets are specified as a percentage of total
     /// character size; so -0.5 will offset half a character to the left/top.
     fn set_offset(&mut self, x: f32, y: f32) {
+        self.is_dirty = true;
         self.offset_x = x * (2.0 / self.width as f32);
         self.offset_y = y * (2.0 / self.height as f32);
     }
 
     fn set_scale(&mut self, scale: f32, center_x: i32, center_y: i32) {
+        self.is_dirty = true;
         self.scale = scale;
         self.scale_center = (center_x, center_y);
     }
