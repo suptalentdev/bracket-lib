@@ -14,15 +14,12 @@ pub mod rex;
 mod simple_console;
 mod sparse_console;
 mod textblock;
-mod input;
 
 pub(crate) type Error = Box<dyn std::error::Error>;
 pub(crate) type Result<T> = core::result::Result<T, Error>;
-pub(crate) use input::clear_input_state;
 
 pub mod prelude {
 
-    pub use crate::input::{Input, BEvent, INPUT};
     pub use crate::bterm::*;
     pub use crate::codepage437::*;
     pub use crate::command_buffer::*;

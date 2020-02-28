@@ -1,9 +1,9 @@
 use crate::{
     prelude::{
         font::Font, init_raw, Console, GameState, InitHints, Shader, SimpleConsole, VirtualKeyCode,
-        XpFile, XpLayer, BEvent, INPUT
+        XpFile, XpLayer,
     },
-    Result
+    Result,
 };
 use bracket_color::prelude::RGB;
 use bracket_geometry::prelude::{Point, Rect};
@@ -219,52 +219,6 @@ impl BTerm {
     pub fn with_post_scanlines(&mut self, with_burn: bool) {
         self.post_scanlines = true;
         self.post_screenburn = with_burn;
-    }
-
-    /// Internal: mark a key press
-    pub(crate) fn on_key_down(&mut self, key : VirtualKeyCode, scan_code: u32) {
-        self.key = Some(key);
-        let mut input = INPUT.lock().unwrap();
-        input.on_key_down(key, scan_code);
-        input.push_event(BEvent::KeyboardInput{key, scan_code});
-    }
-
-    /// Internal: mark a mouse press
-    pub (crate) fn on_mouse_button(&mut self, button_num: usize) {
-        if button_num == 0 {
-            self.left_click = true;
-        }
-        INPUT.lock().unwrap().on_mouse_button(button_num);
-    }
-
-    /// Internal: mark mouse position changes
-    pub (crate) fn on_mouse_position(&mut self, x:f64, y:f64) {
-        self.mouse_pos = (x as i32, y as i32);
-        let mut input = INPUT.lock().unwrap();
-        input.on_mouse_pixel_position(x, y);
-        // TODO: Console cascade!
-        for (i,cons) in self.consoles.iter().enumerate() {
-            let max_sizes = cons.console.get_char_size();
-
-            input.on_mouse_tile_position(
-                i,
-                iclamp(
-                    self.mouse_pos.0 * max_sizes.0 as i32 / i32::max(1, self.width_pixels as i32),
-                    0,
-                    max_sizes.0 as i32 - 1,
-                ),
-                iclamp(
-                    self.mouse_pos.1 * max_sizes.1 as i32 / i32::max(1, self.height_pixels as i32),
-                    0,
-                    max_sizes.1 as i32 - 1,
-                )
-            );
-        }
-    }
-
-    /// Internal: record an event from the HAL back-end
-    pub (crate) fn on_event(&mut self, event : BEvent) {
-        INPUT.lock().unwrap().push_event(event);
     }
 }
 
