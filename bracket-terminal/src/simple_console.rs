@@ -58,6 +58,7 @@ impl Console for SimpleConsole {
     }
 
     /// Translate an x/y into an array index.
+    #[inline]
     fn at(&self, x: i32, y: i32) -> usize {
         (((self.height - 1 - y as u32) * self.width) + x as u32) as usize
     }
@@ -160,6 +161,20 @@ impl Console for SimpleConsole {
         target.for_each(|point| {
             self.set(point.x, point.y, fg, bg, glyph);
         });
+    }
+
+    /// Gets the content of a cell
+    fn get(&self, x: i32, y: i32) -> Option<(&u8, &RGB, &RGB)> {
+        if self.in_bounds(x, y) {
+            let idx = self.at(x, y);
+            Some((
+                &self.tiles[idx].glyph,
+                &self.tiles[idx].fg,
+                &self.tiles[idx].bg,
+            ))
+        } else {
+            None
+        }
     }
 
     /// Draws a horizontal progress bar
