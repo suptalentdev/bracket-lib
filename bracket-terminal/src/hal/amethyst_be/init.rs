@@ -31,9 +31,6 @@ pub fn init_raw<S: ToString>(
     let bterm = BTerm {
         width_pixels,
         height_pixels,
-        fonts: Vec::new(),
-        consoles: Vec::new(),
-        shaders: Vec::new(),
         fps: 0.0,
         frame_time_ms: 0.0,
         active_console: 0,
@@ -46,7 +43,7 @@ pub fn init_raw<S: ToString>(
         web_button: None,
         quitting: false,
         post_scanlines: false,
-        post_screenburn: false,
+        post_screenburn: false
     };
     Ok(bterm)
 }
