@@ -1,11 +1,10 @@
 use super::{BACKEND, CONSOLE_BACKING};
 use crate::hal::*;
-use crate::prelude::{BTerm, Console, GameState, SimpleConsole, SparseConsole, BEvent, INPUT, BACKEND_INTERNAL};
-use crate::{Result, clear_input_state};
+use crate::prelude::{BTerm, Console, GameState, SimpleConsole, SparseConsole};
+use crate::Result;
 use glow::HasContext;
-use glutin::{event::DeviceEvent, event::Event, event::WindowEvent, event_loop::ControlFlow, event::MouseButton};
+use glutin::{event::DeviceEvent, event::Event, event::WindowEvent, event_loop::ControlFlow};
 use std::time::Instant;
-use bracket_geometry::prelude::Point;
 
 const TICK_TYPE: ControlFlow = ControlFlow::Poll;
 
@@ -24,7 +23,6 @@ fn on_resize(bterm: &mut BTerm, physical_size: glutin::dpi::PhysicalSize<u32>) -
     let new_fb =
         Framebuffer::build_fbo(gl, physical_size.width as i32, physical_size.height as i32)?;
     be.backing_buffer = Some(new_fb);
-    bterm.on_event(BEvent::Resized{ new_size : Point::new(physical_size.width, physical_size.height) });
     Ok(())
 }
 
@@ -34,7 +32,7 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
     let mut prev_ms = now.elapsed().as_millis();
     let mut frames = 0;
 
-    for f in BACKEND_INTERNAL.lock().unwrap().fonts.iter_mut() {
+    for f in bterm.fonts.iter_mut() {
         f.setup_gl_texture()?;
     }
 
@@ -57,7 +55,8 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
 
         match event {
             Event::NewEvents(_) => {
-                clear_input_state(&mut bterm);
+                bterm.left_click = false;
+                bterm.key = None;
             }
             Event::MainEventsCleared => {
                 wc.window().request_redraw();
@@ -84,45 +83,21 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
             }
             Event::LoopDestroyed => (),
             Event::WindowEvent { ref event, .. } => match event {
-                WindowEvent::Moved(physical_position) => {
-                    bterm.on_event(BEvent::Moved{new_position : Point::new(physical_position.x, physical_position.y)});
-                }
                 WindowEvent::Resized(physical_size) => {
                     on_resize(&mut bterm, *physical_size).unwrap();
                 }
-                WindowEvent::CloseRequested => {
-                    // If not using events, just close. Otherwise, push the event
-                    if !INPUT.lock().unwrap().use_events {
-                        *control_flow = ControlFlow::Exit;
-                    } else {
-                        bterm.on_event(BEvent::CloseRequested);
-                    }
-                }
-                WindowEvent::ReceivedCharacter(char) => {
-                    bterm.on_event(BEvent::Character{c: *char});
-                }
-                WindowEvent::Focused(focused) => {
-                    bterm.on_event(BEvent::Focused{focused: *focused});
-                }
-                WindowEvent::CursorMoved { position: pos, .. } => {
-                    bterm.on_mouse_position(pos.x, pos.y);
-                }
-                WindowEvent::CursorEntered{..} => bterm.on_event(BEvent::CursorEntered),
-                WindowEvent::CursorLeft{..} => bterm.on_event(BEvent::CursorLeft),
+                WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 
-                WindowEvent::MouseInput { button,.. } => {
-                    let button = match button {
-                        MouseButton::Left => 0,
-                        MouseButton::Right => 1,
-                        MouseButton::Middle => 2,
-                        MouseButton::Other(num) => 3 + *num as usize,
-                    };
-                    bterm.on_mouse_button(button);
+                WindowEvent::CursorMoved { position: pos, .. } => {
+                    bterm.mouse_pos = (pos.x as i32, pos.y as i32);
+                }
+
+                WindowEvent::MouseInput { .. } => {
+                    bterm.left_click = true;
                 }
 
                 WindowEvent::ScaleFactorChanged { new_inner_size, .. } => {
                     on_resize(&mut bterm, **new_inner_size).unwrap();
-                    bterm.on_event(BEvent::ScaleFactorChanged{ new_size: Point::new(new_inner_size.width, new_inner_size.height) })
                 }
 
                 WindowEvent::KeyboardInput {
@@ -130,12 +105,11 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
                         glutin::event::KeyboardInput {
                             virtual_keycode: Some(virtual_keycode),
                             state: glutin::event::ElementState::Pressed,
-                            scancode,
                             ..
                         },
                     ..
                 } => {
-                    bterm.on_key_down(*virtual_keycode, *scancode);
+                    bterm.key = Some(*virtual_keycode);
                 }
 
                 _ => (),
@@ -145,12 +119,12 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
     });
 }
 
-fn check_console_backing() {
+fn check_console_backing(bterm: &mut BTerm) {
     let mut be = BACKEND.lock().unwrap();
     let mut consoles = CONSOLE_BACKING.lock().unwrap();
     if consoles.is_empty() {
         // Easy case: there are no consoles so we need to make them all.
-        for cons in &BACKEND_INTERNAL.lock().unwrap().consoles {
+        for cons in &bterm.consoles {
             let cons_any = cons.console.as_any();
             if let Some(st) = cons_any.downcast_ref::<SimpleConsole>() {
                 consoles.push(ConsoleBacking::Simple {
@@ -175,13 +149,12 @@ fn check_console_backing() {
     }
 }
 
-fn rebuild_consoles() {
+fn rebuild_consoles(bterm: &mut BTerm) {
     let mut consoles = CONSOLE_BACKING.lock().unwrap();
-    let bi = BACKEND_INTERNAL.lock().unwrap();
     for (i, c) in consoles.iter_mut().enumerate() {
         match c {
             ConsoleBacking::Simple { backing } => {
-                let sc = bi.consoles[i]
+                let sc = bterm.consoles[i]
                     .console
                     .as_any()
                     .downcast_ref::<SimpleConsole>()
@@ -199,7 +172,7 @@ fn rebuild_consoles() {
                 }
             }
             ConsoleBacking::Sparse { backing } => {
-                let sc = bi.consoles[i]
+                let sc = bterm.consoles[i]
                     .console
                     .as_any()
                     .downcast_ref::<SparseConsole>()
@@ -220,16 +193,15 @@ fn rebuild_consoles() {
     }
 }
 
-fn render_consoles() -> Result<()> {
-    let bi = BACKEND_INTERNAL.lock().unwrap();
+fn render_consoles(bterm: &mut BTerm) -> Result<()> {
     let mut consoles = CONSOLE_BACKING.lock().unwrap();
     for (i, c) in consoles.iter_mut().enumerate() {
-        let cons = &bi.consoles[i];
-        let font = &bi.fonts[cons.font_index];
-        let shader = &bi.shaders[cons.shader_index];
+        let cons = &bterm.consoles[i];
+        let font = &bterm.fonts[cons.font_index];
+        let shader = &bterm.shaders[cons.shader_index];
         match c {
             ConsoleBacking::Simple { backing } => {
-                let sc = bi.consoles[i]
+                let sc = bterm.consoles[i]
                     .console
                     .as_any()
                     .downcast_ref::<SimpleConsole>()
@@ -237,7 +209,7 @@ fn render_consoles() -> Result<()> {
                 backing.gl_draw(font, shader, sc.height, sc.width)?;
             }
             ConsoleBacking::Sparse { backing } => {
-                let sc = bi.consoles[i]
+                let sc = bterm.consoles[i]
                     .console
                     .as_any()
                     .downcast_ref::<SparseConsole>()
@@ -259,7 +231,7 @@ fn tock<GS: GameState>(
     now: &Instant,
 ) {
     // Check that the console backings match our actual consoles
-    check_console_backing();
+    check_console_backing(bterm);
 
     let now_seconds = now.elapsed().as_secs();
     *frames += 1;
@@ -277,7 +249,7 @@ fn tock<GS: GameState>(
     }
 
     // Console structure - doesn't really have to be every frame...
-    rebuild_consoles();
+    rebuild_consoles(bterm);
 
     // Bind to the backing buffer
     if bterm.post_scanlines {
@@ -299,7 +271,7 @@ fn tock<GS: GameState>(
     gamestate.tick(bterm);
 
     // Tell each console to draw itself
-    render_consoles().unwrap();
+    render_consoles(bterm).unwrap();
 
     // If there is a GL callback, call it now
     {
@@ -318,23 +290,22 @@ fn tock<GS: GameState>(
             .unwrap()
             .default(be.gl.as_ref().unwrap());
         unsafe {
-            let bi = BACKEND_INTERNAL.lock().unwrap();
             if bterm.post_scanlines {
-                bi.shaders[3].useProgram(be.gl.as_ref().unwrap());
-                bi.shaders[3].setVec3(
+                bterm.shaders[3].useProgram(be.gl.as_ref().unwrap());
+                bterm.shaders[3].setVec3(
                     be.gl.as_ref().unwrap(),
                     "screenSize",
                     bterm.width_pixels as f32,
                     bterm.height_pixels as f32,
                     0.0,
                 );
-                bi.shaders[3].setBool(
+                bterm.shaders[3].setBool(
                     be.gl.as_ref().unwrap(),
                     "screenBurn",
                     bterm.post_screenburn,
                 );
             } else {
-                bi.shaders[2].useProgram(be.gl.as_ref().unwrap());
+                bterm.shaders[2].useProgram(be.gl.as_ref().unwrap());
             }
             be.gl
                 .as_ref()
