@@ -11,7 +11,12 @@ pub struct SparseConsoleBackend {
 }
 
 impl SparseConsoleBackend {
-    pub fn new(gl: &glow::Context, width: usize, height: usize) -> SparseConsoleBackend {
+    pub fn new(
+        platform: &super::super::BTermPlatform,
+        width: usize,
+        height: usize,
+    ) -> SparseConsoleBackend {
+        let gl = &platform.platform.gl;
         let texture;
         unsafe {
             texture = gl.create_texture().unwrap();
@@ -103,7 +108,7 @@ impl SparseConsoleBackend {
     /// Helper to build vertices for the sparse grid.
     pub fn rebuild_vertices(
         &mut self,
-        gl: &glow::Context,
+        platform: &super::super::BTermPlatform,
         height: u32,
         width: u32,
         offset_x: f32,
@@ -112,9 +117,10 @@ impl SparseConsoleBackend {
         _scale_center: (i32, i32),
         tiles: &Vec<SparseTile>,
     ) {
+        let gl = &platform.platform.gl;
         unsafe {
             let mut data = vec![0u8; width as usize * height as usize * 4];
-            let mut data2 = vec![0u8; width as usize * height as usize * 4];
+            let data2 = vec![0u8; width as usize * height as usize * 4];
 
             for t in tiles.iter() {
                 let i = t.idx;
@@ -122,10 +128,6 @@ impl SparseConsoleBackend {
                 data[(i * 4) + 1] = (t.fg.r * 255.0) as u8;
                 data[(i * 4) + 2] = (t.fg.g * 255.0) as u8;
                 data[(i * 4) + 3] = (t.fg.b * 255.0) as u8;
-
-                data2[(i * 4)] = (t.bg.r * 255.0) as u8;
-                data2[(i * 4) + 1] = (t.bg.g * 255.0) as u8;
-                data2[(i * 4) + 2] = (t.bg.b * 255.0) as u8;
             }
 
             gl.bind_texture(glow::TEXTURE_2D, Some(self.charbuffer));
@@ -163,9 +165,10 @@ impl SparseConsoleBackend {
         &mut self,
         font: &Font,
         shader: &Shader,
-        gl: &glow::Context,
+        platform: &super::super::BTermPlatform,
         _tiles: &Vec<SparseTile>,
     ) -> Result<()> {
+        let gl = &platform.platform.gl;
         unsafe {
             gl.active_texture(glow::TEXTURE1);
             gl.bind_texture(glow::TEXTURE_2D, Some(self.charbuffer));

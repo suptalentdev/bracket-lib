@@ -1,8 +1,7 @@
+use crate::prelude::HSV;
 #[cfg(feature = "rex")]
 use crate::prelude::XpColor;
-use crate::prelude::{HSV, RGBA};
 use std::ops;
-use std::convert::From;
 
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 #[derive(PartialEq, Copy, Clone, Default, Debug)]
@@ -139,8 +138,6 @@ impl RGB {
     }
 
     /// Constructs from an HTML color code (e.g. "#eeffee")
-    /// 
-    /// # Errors
     #[allow(clippy::cast_precision_loss)]
     pub fn from_hex<S: AsRef<str>>(code: S) -> Result<Self, HtmlColorConversionError> {
         let mut full_code = code.as_ref().chars();
@@ -302,6 +299,40 @@ impl RGB {
     }
 }
 
+#[cfg(feature = "crossterm")]
+mod crossterm_features {
+    use crossterm::style::Color;
+    use std::convert::TryFrom;
+    use super::RGB;
+
+    impl TryFrom<RGB> for Color {
+        type Error = &'static str;
+
+        fn try_from(rgb: RGB) -> Result<Self, Self::Error> {
+            let (r, g, b) = (rgb.r, rgb.g, rgb.b);
+            for c in [r, g, b].iter() {
+                if *c < 0.0 {
+                    return Err("Value < 0.0 found!");
+                }
+                if *c > 1.0 {
+                    return Err("Value > 1.0 found!");
+                }
+            }
+            let (r, g, b) = (
+                (r * 255.0) as u8,
+                (g * 255.0) as u8,
+                (b * 255.0) as u8,
+            );
+            let rgb = Color::Rgb {
+                r,
+                g,
+                b,
+            };
+            Ok(rgb)
+        }
+    }
+}
+
 // Unit tests for the color system
 
 #[cfg(test)]
@@ -361,11 +392,5 @@ mod tests {
         assert!(rgb.r < std::f32::EPSILON);
         assert!(rgb.g < std::f32::EPSILON);
         assert!(f32::abs(rgb.b - 1.0) < std::f32::EPSILON);
-    }
-}
-
-impl From<RGBA> for RGB {
-    fn from(item: RGBA) -> Self {
-        Self::from_f32(item.r, item.g, item.b)
     }
 }

@@ -26,10 +26,6 @@
 //!
 //! If you use the `serde` feature flag, the exposed types are serializable/de-serializable.
 
-#[cfg(feature = "palette")]
-#[macro_use]
-extern crate lazy_static;
-
 /// Import color pair support
 mod color_pair;
 /// Import HSV color support
@@ -38,13 +34,8 @@ mod hsv;
 mod lerpit;
 /// Import library of named colors
 mod named;
-/// Import Palette support
-#[cfg(feature = "palette")]
-mod palette;
 /// Import RGB color support
 mod rgb;
-/// Import RGBA color support
-mod rgba;
 /// Import REX Paint Support
 #[cfg(feature = "rex")]
 mod xpcolor;
@@ -55,10 +46,7 @@ pub mod prelude {
     pub use crate::hsv::*;
     pub use crate::lerpit::*;
     pub use crate::named::*;
-    #[cfg(feature = "palette")]
-    pub use crate::palette::*;
     pub use crate::rgb::*;
-    pub use crate::rgba::*;
     #[cfg(feature = "rex")]
     pub use crate::xpcolor::*;
 }

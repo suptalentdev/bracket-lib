@@ -12,7 +12,7 @@ pub fn project_angle(start: Point, radius: f32, angle_radians: f32) -> Point {
 
 #[cfg(test)]
 mod tests {
-    use crate::prelude::{project_angle, Point};
+    use crate::prelude::{Point, project_angle};
 
     #[test]
     fn test_project_angle() {
