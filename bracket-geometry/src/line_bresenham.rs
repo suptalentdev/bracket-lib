@@ -1,6 +1,6 @@
 //! Original at: https://github.com/mbr/bresenham-rs/blob/master/src/lib.rs
 //! Modified to use more BTerm-friendly types
-//! 
+//!
 use crate::prelude::Point;
 use core::iter::Iterator;
 
@@ -93,11 +93,11 @@ impl Bresenham {
         Bresenham {
             x: start.x,
             y: start.y,
-            dx: dx,
-            dy: dy,
+            dx,
+            dy,
             x1: end.x,
             diff: dy - dx,
-            octant: octant,
+            octant,
         }
     }
 }

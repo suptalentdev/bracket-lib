@@ -18,7 +18,7 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 
 use crate::prelude::Console;
-use bracket_color::prelude::{RGB, XpColor};
+use bracket_color::prelude::{XpColor, RGB};
 
 /// Structure representing a character and its foreground/background color
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -184,8 +184,8 @@ pub fn xp_to_console(
                     console.as_mut().set(
                         x as i32 + offset_x,
                         y as i32 + offset_y,
-                        RGB::from_xp(cell.fg),
-                        RGB::from_xp(cell.bg),
+                        RGB::from_xp(cell.fg).into(),
+                        RGB::from_xp(cell.bg).into(),
                         cell.ch as u8,
                     );
                 }

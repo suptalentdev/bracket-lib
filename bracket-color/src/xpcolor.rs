@@ -1,5 +1,4 @@
 use byteorder::{ReadBytesExt, WriteBytesExt};
-use crate::prelude::RGB;
 use std::io;
 
 /// Structure representing the components of one color
@@ -11,12 +10,6 @@ pub struct XpColor {
     pub g: u8,
     /// Blue component 0..255
     pub b: u8,
-}
-
-impl From<RGB> for XpColor {
-    fn from(rgb: RGB) -> Self {
-        rgb.to_xp()
-    }
 }
 
 impl XpColor {
@@ -45,6 +38,8 @@ impl XpColor {
     }
 
     /// Read a RGB color from a `ReadBytesExt`
+    ///
+    /// # Errors
     #[inline]
     pub fn read<T: ReadBytesExt>(rdr: &mut T) -> io::Result<Self> {
         let r = rdr.read_u8()?;
@@ -54,17 +49,13 @@ impl XpColor {
     }
 
     /// Write a RGB color to a `WriteBytesExt`
+    ///
+    /// # Errors
     #[inline]
     pub fn write<T: WriteBytesExt>(self, wr: &mut T) -> io::Result<()> {
         wr.write_u8(self.r)?;
         wr.write_u8(self.g)?;
         wr.write_u8(self.b)?;
         Ok(())
-    }
-}
-
-impl From<XpColor> for RGB {
-    fn from(xp: XpColor) -> Self {
-        RGB::from_xp(xp)
     }
 }
