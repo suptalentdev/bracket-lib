@@ -38,8 +38,6 @@ impl XpColor {
     }
 
     /// Read a RGB color from a `ReadBytesExt`
-    /// 
-    /// # Errors
     #[inline]
     pub fn read<T: ReadBytesExt>(rdr: &mut T) -> io::Result<Self> {
         let r = rdr.read_u8()?;
@@ -49,8 +47,6 @@ impl XpColor {
     }
 
     /// Write a RGB color to a `WriteBytesExt`
-    /// 
-    /// # Errors
     #[inline]
     pub fn write<T: WriteBytesExt>(self, wr: &mut T) -> io::Result<()> {
         wr.write_u8(self.r)?;

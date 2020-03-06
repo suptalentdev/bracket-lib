@@ -18,7 +18,7 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 
 use crate::prelude::Console;
-use bracket_color::prelude::{XpColor, RGB};
+use bracket_color::prelude::{RGB, XpColor};
 
 /// Structure representing a character and its foreground/background color
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

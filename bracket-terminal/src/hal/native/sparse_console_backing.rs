@@ -1,8 +1,7 @@
-use super::BACKEND;
-use crate::hal::{font::Font, shader::Shader};
-use crate::sparse_console::SparseTile;
 use crate::Result;
 use bracket_color::prelude::RGB;
+use crate::hal::{font::Font, shader::Shader};
+use crate::sparse_console::SparseTile;
 use glow::HasContext;
 use std::mem;
 
@@ -15,8 +14,12 @@ pub struct SparseConsoleBackend {
 }
 
 impl SparseConsoleBackend {
-    pub fn new(_width: usize, _height: usize, gl: &glow::Context) -> SparseConsoleBackend {
-        let (vbo, vao, ebo) = SparseConsoleBackend::init_gl_for_console(gl);
+    pub fn new(
+        platform: &super::super::BTermPlatform,
+        _width: usize,
+        _height: usize,
+    ) -> SparseConsoleBackend {
+        let (vbo, vao, ebo) = SparseConsoleBackend::init_gl_for_console(&platform.platform.gl);
         SparseConsoleBackend {
             vertex_buffer: Vec::new(),
             index_buffer: Vec::new(),
@@ -92,9 +95,9 @@ impl SparseConsoleBackend {
     }
 
     /// Helper to build vertices for the sparse grid.
-    #[allow(clippy::too_many_arguments)]
     pub fn rebuild_vertices(
         &mut self,
+        platform: &super::super::BTermPlatform,
         height: u32,
         width: u32,
         offset_x: f32,
@@ -185,8 +188,7 @@ impl SparseConsoleBackend {
             index_count += 4;
         }
 
-        let be = BACKEND.lock().unwrap();
-        let gl = be.gl.as_ref().unwrap();
+        let gl = &platform.platform.gl;
         unsafe {
             gl.bind_buffer(glow::ARRAY_BUFFER, Some(self.vbo));
             gl.buffer_data_u8_slice(
@@ -204,12 +206,17 @@ impl SparseConsoleBackend {
         }
     }
 
-    pub fn gl_draw(&mut self, font: &Font, shader: &Shader, tiles: &[SparseTile]) -> Result<()> {
-        let be = BACKEND.lock().unwrap();
-        let gl = be.gl.as_ref().unwrap();
+    pub fn gl_draw(
+        &mut self,
+        font: &Font,
+        shader: &Shader,
+        platform: &super::super::BTermPlatform,
+        tiles: &[SparseTile],
+    ) -> Result<()> {
+        let gl = &platform.platform.gl;
         unsafe {
             // bind Texture
-            font.bind_texture(gl);
+            font.bind_texture(platform);
 
             // render container
             shader.useProgram(gl);
