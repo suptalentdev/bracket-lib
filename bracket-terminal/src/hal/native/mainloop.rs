@@ -1,7 +1,7 @@
 use super::{BACKEND, CONSOLE_BACKING};
 use crate::hal::*;
 use crate::prelude::{
-    BEvent, BTerm, GameState, SimpleConsole, SparseConsole, BACKEND_INTERNAL, INPUT, FancyConsole
+    BEvent, BTerm, GameState, SimpleConsole, SparseConsole, BACKEND_INTERNAL, INPUT,
 };
 use crate::{clear_input_state, Result};
 use bracket_geometry::prelude::Point;
@@ -219,14 +219,6 @@ fn check_console_backing() {
                         be.gl.as_ref().unwrap(),
                     ),
                 });
-            } else if let Some(sp) = cons_any.downcast_ref::<FancyConsole>() {
-                consoles.push(ConsoleBacking::Fancy {
-                    backing: FancyConsoleBackend::new(
-                        sp.width as usize,
-                        sp.height as usize,
-                        be.gl.as_ref().unwrap(),
-                    ),
-                });
             } else {
                 panic!("Unknown console type.");
             }
@@ -283,26 +275,6 @@ fn rebuild_consoles() {
                     sc.needs_resize_internal = false;
                 }
             }
-            ConsoleBacking::Fancy { backing } => {
-                let mut fc = bi.consoles[i]
-                    .console
-                    .as_any_mut()
-                    .downcast_mut::<FancyConsole>()
-                    .unwrap();
-                if fc.is_dirty {
-                    backing.rebuild_vertices(
-                        fc.height,
-                        fc.width,
-                        fc.offset_x,
-                        fc.offset_y,
-                        fc.scale,
-                        fc.scale_center,
-                        &fc.tiles,
-                        glyph_dimensions,
-                    );
-                    fc.needs_resize_internal = false;
-                }
-            }
         }
     }
 }
@@ -330,14 +302,6 @@ fn render_consoles() -> Result<()> {
                     .downcast_ref::<SparseConsole>()
                     .unwrap();
                 backing.gl_draw(font, shader, &sc.tiles)?;
-            }
-            ConsoleBacking::Fancy { backing } => {
-                let fc = bi.consoles[i]
-                    .console
-                    .as_any()
-                    .downcast_ref::<FancyConsole>()
-                    .unwrap();
-                backing.gl_draw(font, shader, &fc.tiles)?;
             }
         }
     }

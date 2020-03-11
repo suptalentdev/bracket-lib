@@ -1,6 +1,6 @@
 use super::BACKEND;
 use crate::hal::{font::Font, shader::Shader};
-use crate::prelude::SparseTile;
+use crate::sparse_console::SparseTile;
 use crate::Result;
 use bracket_color::prelude::RGBA;
 use glow::HasContext;
@@ -53,7 +53,7 @@ impl SparseConsoleBackend {
                 (3 * mem::size_of::<f32>()) as i32,
             );
             gl.enable_vertex_attrib_array(1);
-            // background color attribute
+            // bgcolor attribute
             gl.vertex_attrib_pointer_f32(
                 2,
                 4,
@@ -63,7 +63,7 @@ impl SparseConsoleBackend {
                 (7 * mem::size_of::<f32>()) as i32,
             );
             gl.enable_vertex_attrib_array(2);
-            // texture coordinate attribute
+            // texture coord attribute
             gl.vertex_attrib_pointer_f32(
                 3,
                 2,

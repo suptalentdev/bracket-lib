@@ -29,7 +29,7 @@ pub fn clear_command_buffer() -> Result<()> {
     Ok(())
 }
 
-/// Represents a buffered drawing command that can be asynchronously submitted to the drawing
+/// Represents a buffered drawing command that can be asynconously submitted to the drawing
 /// buffer, for application at the end of the frame.
 #[derive(Clone)]
 pub enum DrawCommand {
@@ -139,14 +139,6 @@ pub enum DrawCommand {
         fg: f32,
         bg: f32,
     },
-    SetFancy {
-        position: (f32, f32),
-        z_order: i32,
-        rotation: f32,
-        color: ColorPair,
-        glyph: FontCharType,
-        scale: (f32, f32)
-    }
 }
 
 /// Represents a batch of drawing commands, designed to be submitted together.
@@ -198,12 +190,6 @@ impl DrawBatch {
     /// Sets an individual cell glyph
     pub fn set(&mut self, pos: Point, color: ColorPair, glyph: FontCharType) -> &mut Self {
         self.batch.push((0, DrawCommand::Set { pos, color, glyph }));
-        self
-    }
-
-    /// Pushes a fancy terminal character
-    pub fn set_fancy(&mut self, position: (f32,f32), z_order: i32, rotation: f32, scale: (f32,f32), color: ColorPair, glyph: FontCharType) -> &mut Self {
-        self.batch.push((0, DrawCommand::SetFancy { position, z_order, rotation, color, glyph, scale }));
         self
     }
 
@@ -539,9 +525,6 @@ pub fn render_draw_buffer(bterm: &mut BTerm) -> Result<()> {
         DrawCommand::SetFgAlpha { alpha } => bterm.set_all_fg_alpha(*alpha),
         DrawCommand::SetBgAlpha { alpha } => bterm.set_all_fg_alpha(*alpha),
         DrawCommand::SetAllAlpha { fg, bg } => bterm.set_all_alpha(*fg, *bg),
-        DrawCommand::SetFancy { position, z_order, color, glyph, rotation, scale } => {
-            bterm.set_fancy(position.0, position.1, *z_order, *rotation, *scale, color.fg, color.bg, *glyph);
-        }
     });
     buffer.clear();
     Ok(())

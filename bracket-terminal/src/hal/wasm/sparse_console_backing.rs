@@ -1,5 +1,5 @@
 use crate::prelude::{font::Font, Shader};
-use crate::prelude::SparseTile;
+use crate::sparse_console::SparseTile;
 use crate::Result;
 use glow::HasContext;
 
