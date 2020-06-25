@@ -1,7 +1,7 @@
 use super::*;
 use crate::hal::VirtualKeyCode;
 use crate::prelude::{
-    to_char, BEvent, BTerm, GameState, SimpleConsole, SparseConsole, BACKEND_INTERNAL, RGBA,
+    to_char, BEvent, BTerm, GameState, SimpleConsole, SparseConsole, BACKEND_INTERNAL,
 };
 use crate::{clear_input_state, Result};
 use pancurses::endwin;
@@ -123,22 +123,12 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
         for cons in &mut BACKEND_INTERNAL.lock().consoles {
             let cons_any = cons.console.as_any();
             if let Some(st) = cons_any.downcast_ref::<SimpleConsole>() {
-                let mut last_bg = RGBA::new();
-                let mut last_fg = RGBA::new();
-                let mut cp_fg = 0;
-                let mut cp_bg = 0;
                 let mut idx = 0;
                 for y in 0..st.height {
                     for x in 0..st.width {
                         let t = &st.tiles[idx];
-                        if t.fg != last_fg {
-                            cp_fg = find_nearest_color(t.fg, &be.color_map);
-                            last_fg = t.fg;
-                        }
-                        if t.bg != last_bg {
-                            cp_bg = find_nearest_color(t.bg, &be.color_map);
-                            last_bg = t.bg;
-                        }
+                        let cp_fg = find_nearest_color(t.fg, &be.color_map);
+                        let cp_bg = find_nearest_color(t.bg, &be.color_map);
                         let pair = (cp_bg * 16) + cp_fg;
                         window.attrset(pancurses::COLOR_PAIR(pair.try_into()?));
                         window.mvaddch(
@@ -150,21 +140,11 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
                     }
                 }
             } else if let Some(st) = cons_any.downcast_ref::<SparseConsole>() {
-                let mut last_bg = RGBA::new();
-                let mut last_fg = RGBA::new();
-                let mut cp_fg = 0;
-                let mut cp_bg = 0;
                 for t in st.tiles.iter() {
                     let x = t.idx as u32 % st.width;
                     let y = t.idx as u32 / st.width;
-                    if t.fg != last_fg {
-                        cp_fg = find_nearest_color(t.fg, &be.color_map);
-                        last_fg = t.fg;
-                    }
-                    if t.bg != last_bg {
-                        cp_bg = find_nearest_color(t.bg, &be.color_map);
-                        last_bg = t.bg;
-                    }
+                    let cp_fg = find_nearest_color(t.fg, &be.color_map);
+                    let cp_bg = find_nearest_color(t.bg, &be.color_map);
                     let pair = (cp_bg * 16) + cp_fg;
                     window.attrset(pancurses::COLOR_PAIR(pair.try_into()?));
                     window.mvaddch(
