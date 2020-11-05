@@ -117,7 +117,6 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
             Event::RedrawRequested { .. } => {
                 tock(
                     &mut bterm,
-                    wc.window().scale_factor() as f32,
                     &mut gamestate,
                     &mut frames,
                     &mut prev_seconds,
@@ -208,7 +207,6 @@ pub fn main_loop<GS: GameState>(mut bterm: BTerm, mut gamestate: GS) -> Result<(
 /// Internal handling of the main loop.
 fn tock<GS: GameState>(
     bterm: &mut BTerm,
-    scale_factor: f32,
     gamestate: &mut GS,
     frames: &mut i32,
     prev_seconds: &mut u64,
@@ -281,8 +279,8 @@ fn tock<GS: GameState>(
                 bi.shaders[3].setVec3(
                     be.gl.as_ref().unwrap(),
                     "screenSize",
-                    scale_factor * bterm.width_pixels as f32,
-                    scale_factor * bterm.height_pixels as f32,
+                    bterm.width_pixels as f32,
+                    bterm.height_pixels as f32,
                     0.0,
                 );
                 bi.shaders[3].setBool(be.gl.as_ref().unwrap(), "screenBurn", bterm.post_screenburn);
