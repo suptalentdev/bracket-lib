@@ -4,6 +4,10 @@
 
 > You can read a tutorial series on writing a Roguelike with this library at: [https://bfnightly.bracketproductions.com/rustbook/](https://bfnightly.bracketproductions.com/rustbook/)
 
+> *Bracket-lib* is the primary support library for my book, [Hands-on Rust](https://hands-on-rust.com/). Please consider checking out my book.
+
+Early work has begun on writing a manual. You can find it in the `manual` folder. It uses `mdbook`. Once it's a bit more complete, I'll host it as a website.
+
 ## What happened to RLTK?
 
 This *is* RLTK, renamed because it is increasingly finding usage outside of just Roguelikes. It's also been divided into a number of crates, to make it easy to pick-and-choose the features you need.
@@ -54,6 +58,5 @@ By default, `bracket-lib` runs in OpenGL mode (or WebGL if it detects that you a
 - https://github.com/baszalmstra/my-little-robots
 - https://github.com/Havegum/Terrain-Generator
 - https://github.com/Bobox214/rs-gliphus
-- https://github.com/BobG1983/escape-from-alpha-nine
 - https://github.com/Maxgy/blademaster
 - https://github.com/Maxgy/text-rts
