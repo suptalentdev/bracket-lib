@@ -68,7 +68,10 @@ pub struct BTermPlatform {
 
 #[allow(dead_code)]
 fn convert_fps_to_wait(frame_sleep_time: Option<f32>) -> Option<u64> {
-    frame_sleep_time.map(|f| (f * 1000.0) as u64)
+    match frame_sleep_time {
+        None => None,
+        Some(f) => Some((f * 1000.0) as u64),
+    }
 }
 
 #[allow(dead_code)]

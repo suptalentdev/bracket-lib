@@ -484,7 +484,7 @@ pub fn field_of_view_set(center: Point, range: i32, fov_check: &dyn Algorithm2D)
 
     visible_points
         .iter()
-        .copied()
+        .map(|p| *p)
         .filter(|p| fov_check.in_bounds(*p))
         .collect()
 }
